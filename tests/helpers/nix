@@ -34,8 +34,8 @@ case $command_name in
       rm -f "$profile/bin/opencode"
       exit 1
     fi
-    cat >"$profile/bin/opencode" <<'EOF'
-#!/usr/bin/env bash
+    printf '#!%s\n' "$BASH" >"$profile/bin/opencode"
+    cat >>"$profile/bin/opencode" <<'EOF'
 printf 'mock-cli runtime=%s args=' "${SECLI_TEST_RUNTIME-}"
 printf '<%s>' "$@"
 printf '\n'
@@ -47,8 +47,8 @@ EOF
     if [[ ${MOCK_NIX_ROLLBACK_FAIL:-false} == true ]]; then
       exit 1
     fi
-    cat >"$profile/bin/opencode" <<'EOF'
-#!/usr/bin/env bash
+    printf '#!%s\n' "$BASH" >"$profile/bin/opencode"
+    cat >>"$profile/bin/opencode" <<'EOF'
 printf 'rolled-back-cli args='
 printf '<%s>' "$@"
 printf '\n'

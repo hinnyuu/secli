@@ -12,7 +12,9 @@ setup() {
   cp "${SECLI_ENTRYPOINT:-$REPO_ROOT/entrypoint.sh}" "$ROOT/entrypoint.sh"
   cp "${SECLI_ENTRYPOINT_MANIFEST:-$REPO_ROOT/tests/fixtures/entrypoint/manifest/opencode.conf}" \
     "$ROOT/manifest/opencode.conf"
-  cp "${SECLI_NIX_MOCK:-$REPO_ROOT/tests/helpers/nix}" "$MOCK_BIN/nix"
+  nix_mock=${SECLI_NIX_MOCK:-$REPO_ROOT/tests/helpers/nix}
+  printf '#!%s\n' "$BASH" >"$MOCK_BIN/nix"
+  tail -n +2 "$nix_mock" >>"$MOCK_BIN/nix"
   chmod +x "$ROOT/entrypoint.sh" "$MOCK_BIN/nix"
   export PATH="$MOCK_BIN:$PATH"
   export SECLI_NIX_BIN="$MOCK_BIN/nix"
@@ -59,8 +61,8 @@ run_entrypoint() {
 @test "matching stamp and executable are a noop" {
   mkdir -p "$(dirname "$(stamp)")" "$(profile)/bin"
   printf '%s\n' "github:numtide/llm-agents.nix/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa#opencode" >"$(stamp)"
-  cat >"$(profile)/bin/opencode" <<'EOF'
-#!/usr/bin/env bash
+  printf '#!%s\n' "$BASH" >"$(profile)/bin/opencode"
+  cat >>"$(profile)/bin/opencode" <<'EOF'
 printf 'noop-cli\n'
 EOF
   chmod +x "$(profile)/bin/opencode"
@@ -86,8 +88,8 @@ EOF
 @test "install failure rolls back a usable previous profile and exits nonzero" {
   mkdir -p "$(dirname "$(stamp)")" "$(profile)/bin"
   printf '%s\n' "github:numtide/llm-agents.nix/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb#opencode" >"$(stamp)"
-  cat >"$(profile)/bin/opencode" <<'EOF'
-#!/usr/bin/env bash
+  printf '#!%s\n' "$BASH" >"$(profile)/bin/opencode"
+  cat >>"$(profile)/bin/opencode" <<'EOF'
 printf 'old-cli\n'
 EOF
   chmod +x "$(profile)/bin/opencode"

@@ -13,7 +13,8 @@ setup() {
   chmod -R u+w "$DEPLOY"
   cp "$script" "$DEPLOY/secli.sh"
   cp "$version" "$DEPLOY/VERSION"
-  cp "$podman_mock" "$MOCK_BIN/podman"
+  printf '#!%s\n' "$BASH" >"$MOCK_BIN/podman"
+  tail -n +2 "$podman_mock" >>"$MOCK_BIN/podman"
   chmod +x "$MOCK_BIN/podman"
   export PATH="$MOCK_BIN:$PATH"
 }
