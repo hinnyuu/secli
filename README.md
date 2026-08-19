@@ -3,9 +3,9 @@
 Secure Enhanced CLI：使用 Fedora 宿主机上的 rootless Podman 与容器内 Nix，为多个
 AI coding CLI 提供统一、隔离、可重建的运行环境。
 
-> **项目状态：v0.1 实现和发布候选验证已完成，尚未正式发布。**
+> **项目状态：v0.1.0 正式发布候选。**
 >
-> 当前 `VERSION` 仍为开发版本，默认远程镜像标签尚不存在；开发测试请通过 `SECLI_IMAGE`
+> 发布前请先确认 GitHub Actions 和 GHCR 镜像 workflow 成功；开发测试可通过 `SECLI_IMAGE`
 > 指向本地镜像。
 
 ## 为什么需要 secli
@@ -107,12 +107,11 @@ SECLI_IMAGE=ghcr.io/hinnyuu/secli:custom ./secli.sh opencode
 ```
 
 开发阶段 `secli.sh` 不隐式执行 `podman pull`。镜像不存在时直接报错；用户需要手动
-执行 `podman pull`，或通过 `SECLI_IMAGE` 指向本地开发镜像。
+执行 `podman pull`，或通过 `SECLI_IMAGE` 指向本地镜像。
 
 `latest` 和 `stable` 可以作为方便别名，但 secli 默认不依赖移动标签。
 
-首次实现阶段的 `VERSION` 使用 `v0.1.0-dev`，它不承诺 GHCR 存在同名镜像。正式发布前
-改为 `v0.1.0`。开发期在 Fedora 宿主机测试本地镜像时显式覆盖：
+正式版本使用 `v0.1.0`。开发或本地 Fedora 测试时显式覆盖镜像：
 
 ```bash
 SECLI_IMAGE=localhost/secli:dev ./secli.sh opencode
