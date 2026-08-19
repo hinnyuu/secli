@@ -235,7 +235,8 @@ Verify the published address while a container is alive. Run this from the same 
 
 ```bash
 SECLI_ALLOWED_PREFIXES=/tmp/secli-matrix-project \
-  /data/projects/hinnyuu/secli/secli.sh probe -p 4097 -- -c 'sleep 30' &
+  /data/projects/hinnyuu/secli/secli.sh probe -p 4097 -- -c 'sleep 30' \
+  </dev/null >/tmp/secli-port-4097.log 2>&1 &
 secli_pid=$!
 sleep 2
 podman port secli 4097/tcp
@@ -247,7 +248,8 @@ Expected mapping: `127.0.0.1:4097`. Repeat with explicit external exposure only 
 
 ```bash
 SECLI_ALLOWED_PREFIXES=/tmp/secli-matrix-project \
-  /data/projects/hinnyuu/secli/secli.sh probe -p 0.0.0.0:4098:4098 -- -c 'sleep 30' &
+  /data/projects/hinnyuu/secli/secli.sh probe -p 0.0.0.0:4098:4098 -- -c 'sleep 30' \
+  </dev/null >/tmp/secli-port-4098.log 2>&1 &
 secli_pid=$!
 sleep 2
 podman port secli 4098/tcp
@@ -261,6 +263,7 @@ Cleanup:
 
 ```bash
 podman rm -f secli 2>/dev/null || true
+rm -f /tmp/secli-port-4097.log /tmp/secli-port-4098.log
 rm -rf /data/projects/hinnyuu/secli/manifest.local/probe.conf \
   /data/projects/hinnyuu/secli/templates/probe \
   /tmp/secli-matrix-project /tmp/secli-matrix-dataset /tmp/secli-matrix-state
@@ -269,7 +272,8 @@ unset SECLI_IMAGE SECLI_STATE_DIR
 
 ## CLI authentication persistence
 
-Status: pending user-host verification.
+Status: authenticated persistence verified for both CLIs; port mapping remains pending a clean
+background-process rerun.
 
 Do not paste credentials, tokens or login URLs into project files, test logs or issue reports.
 Test one CLI at a time using a dedicated temporary state root:
@@ -308,3 +312,12 @@ the temporary state only after deciding that its login state is no longer needed
 unset SECLI_IMAGE SECLI_STATE_DIR
 rm -rf /tmp/secli-auth-state
 ```
+
+Observed during the 2026-08-19 host test:
+
+- OpenCode authentication, sessions and provider state persisted after restart under its Home.
+- Qoder CN authentication and sessions persisted after restart under its Home.
+- Qoder CN created native runtime files under `.qoder-cn/.auth/`, `.qoder-cn/.bin/`,
+  `.qoder-cn/entry/`, `.qoder-cn/projects/` and `.qodersec/`. These are expected Home state, not
+  secli-managed paths.
+- No credentials were placed in manifests, templates or `/nix`.
