@@ -3,7 +3,7 @@
 Secure Enhanced CLI：使用 Fedora 宿主机上的 rootless Podman 与容器内 Nix，为多个
 AI coding CLI 提供统一、隔离、可重建的运行环境。
 
-> **项目状态：v0.1.0 正式发布候选。**
+> **项目状态：v0.1.0 已正式发布。**
 >
 > 发布前请先确认 GitHub Actions 和 GHCR 镜像 workflow 成功；开发测试可通过 `SECLI_IMAGE`
 > 指向本地镜像。
@@ -359,7 +359,7 @@ NVIDIA CDI、项目/数据集读写边界、两个 CLI 的认证持久化以及 
 - [x] opencode、qoder-cli-cn manifest 和模板
 - [x] 自动测试与 Fedora 宿主机测试手册；基础 NVIDIA、认证、挂载/端口矩阵和正常启动下
   的 updater/shim 行为已验证
-- [ ] 首个版本化发布
+- [x] 首个版本化发布 `v0.1.0`
 
 实现按上述顺序拆成可独立验证的阶段；除非明确要求完整 v1，否则不把所有阶段合并成
 一次巨大变更。build 阶段允许初始化本地 Git 仓库，并按 Conventional Commits 创建本地

@@ -75,7 +75,7 @@ podman run --rm --entrypoint /nix/var/nix/profiles/secli-base/bin/rg \
 Expected:
 
 - entrypoint is `["/entrypoint.sh"]`;
-- image version is `v0.1.0` for the release candidate;
+- image version is `v0.1.0` for the released image;
 - git and ripgrep print versions successfully.
 
 ### Empty volume and real CLI profiles
@@ -331,11 +331,11 @@ Observed during the 2026-08-19 host test:
   secli-managed paths.
 - No credentials were placed in manifests, templates or `/nix`.
 
-## Final release-candidate verification
+## Final release verification
 
 Status: passed on Fedora amd64 with a clean CLI state root and a newly created `secli-nix-v1`.
 
-The final `v0.1.0` candidate was rebuilt from merged `main`. A clean `/tmp/secli-rc-state` was
+The final `v0.1.0` release was rebuilt from merged `main`. A clean `/tmp/secli-rc-state` was
 initialized with `secli.sh init all`; both configuration files matched their repository templates
 before first start. First profile installation reported OpenCode `1.18.18` and Qoder CN `1.1.25`,
 and repeat version checks were noops.
@@ -346,5 +346,5 @@ did not change updater binary candidates after a normal interactive session. Qod
 and kept its native entry/runtime files byte-stable after first-run initialization. Both running
 processes resolved to their dedicated Nix store/profile paths rather than Home copies.
 
-All release-candidate steps completed without an automatic update, replacement binary or alternate
+All release steps completed without an automatic update, replacement binary or alternate
 Home-based startup path.

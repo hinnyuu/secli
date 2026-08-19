@@ -64,7 +64,7 @@ Verified at the manifest commit:
   OpenCode Home.
 - Project, dataset, SELinux, port and NVIDIA mount behavior passed the host matrix.
 
-Fedora release-candidate verification with a newly initialized Home confirmed:
+Fedora release verification with a newly initialized Home confirmed:
 
 - the repository template is copied byte-for-byte before first start;
 - resolved config contains `autoupdate: false` and `share: disabled`;
@@ -117,4 +117,4 @@ OpenCode binary under `/root`. A Nix wrapper may make `/proc/1/exe` resolve to B
 contains the profile wrapper. Remove only the two temporary snapshot files after recording the
 result.
 
-Result: passed on Fedora amd64 during the final `v0.1.0` release-candidate test.
+Result: passed on Fedora amd64 during the final `v0.1.0` release test.

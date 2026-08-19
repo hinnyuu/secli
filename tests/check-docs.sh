@@ -14,6 +14,13 @@ version=$(<"$ROOT/VERSION")
 [[ $version =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-dev)?$ ]] ||
   fail "VERSION must match vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-dev"
 
+if git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  tag=$(git -C "$ROOT" tag --points-at HEAD | sort -V | tail -n 1)
+  if [[ -n $tag && $tag != "$version" ]]; then
+    fail "tag '$tag' at HEAD does not match VERSION '$version'"
+  fi
+fi
+
 if rg -n '<FULL_COMMIT>|QODER_APPEND_SYSTEM_PROMPT|/root/\.qoder/' \
   "$ROOT/AGENTS.md" "$ROOT/README.md" "$ROOT/docs"; then
   fail "obsolete placeholder or Qoder path remains in documentation"
