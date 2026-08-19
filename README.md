@@ -232,6 +232,10 @@ state/
 SECLI_STATE_DIR=/secure/path/secli-state ./secli.sh opencode
 ```
 
+从 Git clone 直接运行时，默认状态目录是仓库内的 `state/`。通过 `nix build` 或 Nix profile
+安装的 `secli` wrapper 默认使用 `$XDG_STATE_HOME/secli`，未设置 XDG 时回退到
+`$HOME/.local/state/secli`；两种部署方式都可以用 `SECLI_STATE_DIR` 显式覆盖。
+
 状态目录权限至少为 `0700`。备份某个 CLI 时，停止 secli 后复制对应的
 `state/<cli>/home/` 即可。
 

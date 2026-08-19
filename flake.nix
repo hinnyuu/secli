@@ -54,7 +54,8 @@
               cp -R docs/clis/. "$out/share/doc/secli/clis/"
               makeWrapper ${pkgs.bash}/bin/bash "$out/bin/secli" \
                 --add-flags "$out/libexec/secli/secli.sh" \
-                --prefix PATH : ${nixpkgs.lib.makeBinPath [ pkgs.coreutils pkgs.findutils ]}
+                --prefix PATH : ${nixpkgs.lib.makeBinPath [ pkgs.coreutils pkgs.findutils ]} \
+                --run 'export SECLI_STATE_DIR="''${SECLI_STATE_DIR:-''${XDG_STATE_HOME:-$HOME/.local/state}/secli}"'
               runHook postInstall
             '';
             meta = {
@@ -172,11 +173,19 @@
           '';
 
           package-smoke = pkgs.runCommand "secli-package-smoke" { } ''
+            export HOME="$TMPDIR/home"
+            mkdir -p "$HOME"
             ${package}/bin/secli --help >output
             grep -F "Secure Enhanced CLI" output
             ${package}/bin/secli list >clis
             grep -Fx opencode clis
             grep -Fx qoder-cli-cn clis
+            ${package}/bin/secli init all >init-output
+            test -f "$HOME/.local/state/secli/opencode/home/.config/opencode/opencode.jsonc"
+            test -f "$HOME/.local/state/secli/qoder-cli-cn/home/.qoder-cn/settings.json"
+            XDG_STATE_HOME="$TMPDIR/xdg-state" ${package}/bin/secli init all >xdg-init-output
+            test -f "$TMPDIR/xdg-state/secli/opencode/home/.config/opencode/opencode.jsonc"
+            test -f "$TMPDIR/xdg-state/secli/qoder-cli-cn/home/.qoder-cn/settings.json"
             touch "$out"
           '';
         });

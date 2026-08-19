@@ -491,6 +491,9 @@ checks
 - `devShells.default`：ShellCheck、Bats、shfmt、actionlint，以及测试所需的 jq 等开发工具。
 - `packages.default`：可执行的宿主机 secli 部署包，包含运行所需脚本和只读资源；用于
   `nix build` 后执行 `./result/bin/secli --help` 冒烟测试。
+- Nix package wrapper 在未显式设置 `SECLI_STATE_DIR` 时使用 `$XDG_STATE_HOME/secli`，并
+  回退到 `$HOME/.local/state/secli`，不得尝试写入只读 Nix store。Git clone 部署仍默认使用
+  仓库内 `state/`。
 - `checks`：shellcheck、格式、Bats、manifest 契约与模板布局检查。
 
 生产镜像仍由 Containerfile 构建。Flake 的宿主机包是额外的可复现验证/安装方式，不能
