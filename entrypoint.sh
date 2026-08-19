@@ -109,7 +109,7 @@ run_profile_reconciliation() {
   "$NIX_BIN" profile remove --all --profile "$profile" ||
     die "failed to clear current generation of profile '$profile'"
 
-  if "$NIX_BIN" profile add --profile "$profile" "$INSTALL_REF" && [[ -x $binary ]]; then
+  if "$NIX_BIN" --accept-flake-config profile add --profile "$profile" "$INSTALL_REF" && [[ -x $binary ]]; then
     write_stamp "$stamp"
     return 0
   fi

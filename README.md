@@ -288,6 +288,9 @@ CLI 更新流程：
 保留旧 stamp，并在可能时回滚旧 generation；无论回滚是否成功，本次启动都返回失败，
 不会静默运行与当前 manifest 不一致的旧 CLI。
 
+entrypoint 对固定的 CLI flake ref 使用 `--accept-flake-config`，避免上游 flake 的合法配置
+提示阻塞首次安装或脚本化启动。
+
 基础镜像更新流程：
 
 ```text

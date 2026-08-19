@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ ${1-} == --accept-flake-config ]]; then
+  shift
+fi
 [[ ${1-} == profile ]] || exit 2
 shift
 command_name=${1-}

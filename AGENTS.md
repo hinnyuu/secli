@@ -264,7 +264,8 @@ profile，切换 `/root` 时也不会改变 GC root 的含义。
    可用。
 3. 使用 `nix profile remove --all --profile <profile>` 创建内容为空的新 current
    generation；不得删除历史 generation，不得在安装成功前执行 `wipe-history`。
-4. 执行 `nix profile add --profile <profile> "$INSTALL_REF"`。
+4. 使用 `nix --accept-flake-config profile add --profile <profile> "$INSTALL_REF"` 安装固定
+   flake ref，避免受信任上游 flake 的配置提示阻塞非交互启动。
 5. 安装成功且 `<profile>/bin/<BIN>` 可执行后，使用同目录临时文件加原子 rename 更新
    stamp。
 6. 安装失败时保留旧 stamp；如果旧 generation 已确认可用，则尝试
