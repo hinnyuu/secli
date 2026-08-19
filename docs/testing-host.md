@@ -6,8 +6,8 @@ under the relevant section after testing.
 
 ## Development image and initial Nix volume
 
-Status: verified for image build, empty volume initialization, profile installation and repeat
-startup. Authentication, updater behavior and some mount cases remain pending.
+Status: verified for image build, empty volume initialization, profile installation, repeat
+startup, authentication and mount behavior. Updater behavior remains pending.
 
 These steps validate the initial `Containerfile`, immutable base-image pin, `/nix` named-volume
 copy behavior and real installation of both CLI profiles. They use a temporary Home state root but

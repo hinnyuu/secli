@@ -55,11 +55,52 @@ the old generation silently.
 
 ## Verification status
 
-Verified in the development container at the manifest commit:
+Verified at the manifest commit:
 
 - Nix package builds successfully on `x86_64-linux`.
 - `opencode --version` reports `1.18.18`.
 - `opencode --help` runs without creating files in a temporary Home.
+- Fedora rootless Podman starts the profile and preserves authentication and sessions in the
+  OpenCode Home.
+- Project, dataset, SELinux, port and NVIDIA mount behavior passed the host matrix.
 
-Real authentication, SELinux mounts, named-volume behavior and an interactive Fedora Podman run
-remain host integration tests.
+Native automatic-updater behavior remains a host integration test.
+
+## Automatic-updater test
+
+Do not run `opencode upgrade`; this test checks normal startup only. From a project directory, use
+the same state root that already contains the test login:
+
+```bash
+export SECLI_IMAGE=localhost/secli:dev
+export SECLI_STATE_DIR=/tmp/secli-auth-state
+/data/projects/hinnyuu/secli/secli.sh opencode -- debug config \
+  | grep -E '"(autoupdate|share)"'
+```
+
+Expected resolved values are `autoupdate: false` and `share: disabled`.
+
+Snapshot any updater-managed binary candidates before and after one normal interactive session:
+
+```bash
+home="$SECLI_STATE_DIR/opencode/home"
+find "$home/.cache/opencode/bin" -type f -exec sha256sum {} + 2>/dev/null \
+  | sort > /tmp/secli-opencode-bin.before
+/data/projects/hinnyuu/secli/secli.sh opencode
+find "$home/.cache/opencode/bin" -type f -exec sha256sum {} + 2>/dev/null \
+  | sort > /tmp/secli-opencode-bin.after
+diff -u /tmp/secli-opencode-bin.before /tmp/secli-opencode-bin.after
+```
+
+Expected: no new or changed updater binary. Session/database/cache changes elsewhere in Home are
+normal. While OpenCode is running, inspect PID 1 from another terminal:
+
+```bash
+podman exec secli /bin/sh -c \
+  'readlink -f /proc/1/exe; tr "\0" " " </proc/1/cmdline; printf "\n"'
+```
+
+Expected: the executable and command line use the Nix store/profile and do not reference an
+OpenCode binary under `/root`. A Nix wrapper may make `/proc/1/exe` resolve to Bash while cmdline
+contains the profile wrapper. Remove only the two temporary snapshot files after recording the
+result.

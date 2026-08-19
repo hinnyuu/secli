@@ -232,6 +232,10 @@ state/
 SECLI_STATE_DIR=/secure/path/secli-state ./secli.sh opencode
 ```
 
+从 Git clone 直接运行时，默认状态目录是仓库内的 `state/`。通过 `nix build` 或 Nix profile
+安装的 `secli` wrapper 默认使用 `$XDG_STATE_HOME/secli`，未设置 XDG 时回退到
+`$HOME/.local/state/secli`；两种部署方式都可以用 `SECLI_STATE_DIR` 显式覆盖。
+
 状态目录权限至少为 `0700`。备份某个 CLI 时，停止 secli 后复制对应的
 `state/<cli>/home/` 即可。
 
@@ -315,17 +319,21 @@ nix build
 ./result/bin/secli --help
 ```
 
-检查包括 ShellCheck、shfmt、actionlint、Bats、manifest 契约和模板布局。当前 Bats 覆盖
-宿主机启动器和 entrypoint 的 22 个场景；Podman 参数测试使用 mock，不依赖当前开发容器内
-的嵌套 daemon。
+检查包括 ShellCheck、shfmt、actionlint、Bats、文档一致性、manifest 契约和模板布局。
+当前 Bats 覆盖宿主机启动器和 entrypoint 的 22 个场景；Podman 参数测试使用 mock，不依赖
+当前开发容器内的嵌套 daemon。每次提交前检查 `AGENTS.md`、README、相关文档、`.gitignore`、
+`VERSION` 和 `flake.lock`；事实变化必须与实现放在同一提交，无关提交不制造文档噪声。
 
 生产镜像由 `Containerfile` 定义。v1 只实现 GitHub Actions，并使用 workflow 的
 `GITHUB_TOKEN` 推送 GHCR；Gitea Actions 是未来迁移目标，不维护第二套 workflow。当前
 LLM 开发容器没有 registry 凭据，不执行推送。
 
+v0.1 首发镜像只发布 `linux/amd64`。Flake 和 Nix CLI 包保留 `aarch64-linux` 输出，但 arm64
+镜像需完成对应 Fedora 宿主机验证和 CI runner 方案后再启用。
+
 两个首发 manifest 固定到同一个 `numtide/llm-agents.nix` commit。OpenCode `1.18.18` 和
 Qoder CN `1.1.25` 的版本、平台、下载来源和 `meta.mainProgram` 已确认并记录在
-`docs/clis/`。真实登录、Home 持久化和自更新行为仍需 Fedora 宿主机实测。
+`docs/clis/`。真实登录和 Home 持久化已在 Fedora 宿主机验证，自更新行为仍待实测。
 
 完整 Podman、SELinux、named volume copy、真实登录和 NVIDIA 测试必须在 Fedora 宿主机
 人工执行。相关改动必须同时提供可复制命令、预期结果和清理步骤，并把结论记录到
@@ -335,7 +343,7 @@ Qoder CN `1.1.25` 的版本、平台、下载来源和 `meta.mainProgram` 已确
 当前已由 Fedora 宿主机验证镜像构建、空 Nix volume 初始化、两个 CLI 的 profile 安装与
 版本、第二次启动复用、首次安装无配置授权提示、基础 SELinux 挂载、固定容器名并发拒绝、
 NVIDIA CDI、项目/数据集读写边界、两个 CLI 的认证持久化以及 loopback/全网卡端口映射。
-自更新行为仍待验证。
+原生自动更新关闭后的实际行为仍待最后验证。
 
 ## 当前路线图
 
@@ -344,12 +352,12 @@ NVIDIA CDI、项目/数据集读写边界、两个 CLI 的认证持久化以及 
 - [x] Flake 开发环境与基础检查
 - [x] 宿主机启动器 `secli.sh` 基础版本
 - [x] 容器 `entrypoint.sh` 与 Nix profile 对账基础版本
-- [x] Containerfile（静态实现，Fedora/CI 构建待验证）
-- [x] CI 与 tag release workflow（静态实现，需 GitHub 仓库验证）
+- [x] Containerfile 与 Fedora 构建验证
+- [x] CI 与 tag release workflow；PR CI 已验证
 - [x] opencode、qoder-cli-cn manifest 和模板
 - [x] 自动测试与 Fedora 宿主机测试手册初稿；基础 NVIDIA、认证和挂载/端口矩阵已验证，
   自更新和 SELinux 深度场景仍待完成
-- [ ] 首个版本化发布（许可证文件由 GitHub 创建仓库时提供）
+- [ ] 首个版本化发布
 
 实现按上述顺序拆成可独立验证的阶段；除非明确要求完整 v1，否则不把所有阶段合并成
 一次巨大变更。build 阶段允许初始化本地 Git 仓库，并按 Conventional Commits 创建本地

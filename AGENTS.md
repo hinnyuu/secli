@@ -491,6 +491,9 @@ checks
 - `devShells.default`：ShellCheck、Bats、shfmt、actionlint，以及测试所需的 jq 等开发工具。
 - `packages.default`：可执行的宿主机 secli 部署包，包含运行所需脚本和只读资源；用于
   `nix build` 后执行 `./result/bin/secli --help` 冒烟测试。
+- Nix package wrapper 在未显式设置 `SECLI_STATE_DIR` 时使用 `$XDG_STATE_HOME/secli`，并
+  回退到 `$HOME/.local/state/secli`，不得尝试写入只读 Nix store。Git clone 部署仍默认使用
+  仓库内 `state/`。
 - `checks`：shellcheck、格式、Bats、manifest 契约与模板布局检查。
 
 生产镜像仍由 Containerfile 构建。Flake 的宿主机包是额外的可复现验证/安装方式，不能
@@ -609,6 +612,26 @@ amend（除非用户明确要求）、破坏性 reset 和修改他人无关变�
 当前项目允许在本地 Git 仓库中按 Conventional Commits 创建分支和提交，但不配置远程仓库
 或执行 GitHub 操作。
 
+### 17.1 提交前同步门禁
+
+每次提交前必须检查 `AGENTS.md`、`README.md`、相关 `docs/`、`.gitignore`、`VERSION` 与
+`flake.lock`。这是一项检查义务，不要求无关提交制造文档改动；只要实现、用户接口、安全
+边界、验证状态、依赖或运行时文件布局发生变化，就必须在同一提交中同步对应文件。
+
+最低检查规则：
+
+1. 架构、manifest、状态、挂载、安全或发布契约变化时更新 `AGENTS.md`；
+2. 用户命令、部署、错误行为、版本或项目状态变化时更新 `README.md`；
+3. Fedora、CLI、NVIDIA 或安全验证结论写入对应 `docs/`，不得只留在对话中；
+4. 新增认证、缓存、构建产物、用户覆盖或运行时目录时检查 `.gitignore`；
+5. 依赖输入变化时检查 `flake.lock`，发布阶段检查 `VERSION`、tag 与镜像标签；
+6. 提交前运行文档一致性 check，并搜索 `待验证`、`pending`、`计划中`、`尚未实现`、完整
+   commit 占位符和 `-dev`，逐项确认仍为真实状态。
+
+每个里程碑结束、PR 创建前和 release 前还必须执行一次全量文档审查。可机器验证的占位符、
+版本格式、LICENSE、测试数量和已知过期文本由 `tests/check-docs.sh` 与 Flake check 强制检查；
+安全描述、宿主机实测和架构语义仍由提交者人工审查。
+
 ---
 
 ## 18. 路线图与开放验证项
@@ -635,8 +658,8 @@ amend（除非用户明确要求）、破坏性 reset 和修改他人无关变�
 - [x] 两套 Home 镜像模板
 - [x] CLI 档案初稿、安全和 NVIDIA 文档；基础 SELinux/NVIDIA 宿主机测试、挂载/端口矩阵
   和真实认证已完成，更新器行为仍待完成
-- [x] CI 与 tag release workflow
-- [ ] LICENSE（由 GitHub 创建仓库时生成）
+- [x] CI 与 tag release workflow；Actions 固定 commit，PR CI 构建 amd64 镜像
+- [x] LICENSE
 - [x] VERSION
 
 ### 推荐实现阶段
@@ -658,11 +681,13 @@ amend（除非用户明确要求）、破坏性 reset 和修改他人无关变�
 
 必须通过实践确认：
 
-- qoder-cli-cn 在 Fedora 宿主机的实际登录流程、Home 持久化和配置生效行为；
 - Qoder CN 原生更新器在模板设置生效后的实际行为；
 - opencode/Qoder 在 Nix profile 安装形态下是否创建替代二进制或 shim；
-- Fedora Podman 对 `/nix` 空 named volume 的 copy 行为和 epoch 升级流程；
-- 是否发布 `x86_64-linux` 与 `aarch64-linux` 多架构镜像，以及 CI runner 方案。
+- Fedora Podman 的 Nix volume epoch 升级流程；
+- arm64 镜像的 Fedora 宿主机验证和 CI runner 方案。
+
+v0.1 首发镜像只发布 `linux/amd64`。Flake 和 Nix CLI 包保留 `aarch64-linux` 输出，但 arm64
+镜像不属于首发承诺，需完成对应 Fedora 宿主机验证和 CI runner 方案后再启用。
 
 已验证：Fedora 宿主机上的镜像构建、空 `secli-nix-v1` 初始化、两个首发 profile 安装、
 OpenCode `1.18.18`、Qoder CN `1.1.25`、第二次启动 noop、固定 flake 配置的非交互安装、
