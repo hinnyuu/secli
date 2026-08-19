@@ -660,5 +660,9 @@ amend（除非用户明确要求）、破坏性 reset 和修改他人无关变�
 - Fedora Podman 对 `/nix` 空 named volume 的 copy 行为和 epoch 升级流程；
 - 是否发布 `x86_64-linux` 与 `aarch64-linux` 多架构镜像，以及 CI runner 方案。
 
+已验证：Fedora 宿主机上的镜像构建、空 `secli-nix-v1` 初始化、两个首发 profile 安装、
+OpenCode `1.18.18`、Qoder CN `1.1.25`、第二次启动 noop，以及固定 flake 配置的非交互
+安装。结果详见 `docs/testing-host.md`。
+
 这些是测试阶段的开放事实，不是重新讨论已定案架构的理由。发现新事实时，先记录证据，
 再最小化调整契约和本文档。

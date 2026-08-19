@@ -6,8 +6,8 @@ under the relevant section after testing.
 
 ## Development image and initial Nix volume
 
-Status: partially verified on Fedora; authentication, updater behavior and some mount cases remain
-pending.
+Status: verified for image build, empty volume initialization, profile installation and repeat
+startup. Authentication, updater behavior and some mount cases remain pending.
 
 These steps validate the initial `Containerfile`, immutable base-image pin, `/nix` named-volume
 copy behavior and real installation of both CLI profiles. They use a temporary Home state root but
@@ -140,12 +140,13 @@ Date: 2026-08-19
 Host architecture: Fedora host, amd64
 Podman version: verified >= 5.8.4
 SELinux mode: verified expected configuration
-Image build: passed; Podman emitted a deprecation warning for the Nix `install` alias before it was replaced with `add`
+Image build: passed; the follow-up build with `nix profile add` completed without the previous alias warning
 Empty /nix volume initialization: passed
 OpenCode profile/version: passed, `1.18.18`
 Qoder CN profile/version: passed, `1.1.25`
 Second-start noop: passed for both CLIs
 Image entrypoint and labels: passed; image digest `sha256:23c783aa66d3791c70dc976731cb16bb634ffe0488f0112a65b7bb98215748db`
 Base tools: passed; git `2.55.0`, ripgrep `15.2.0`
-Notes: Initial profile installation prompted for flake-config trust. The entrypoint now uses `--accept-flake-config` for the pinned CLI flake; rerun the first-install test after pulling this change.
+Non-interactive first install: passed after commit `8bd588a`; no flake-config trust prompt appeared
+Notes: Host cleanup completed. The expected "There are no packages in the profile" warning is emitted while clearing a fresh profile and is non-fatal.
 ```

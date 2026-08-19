@@ -331,6 +331,10 @@ Qoder CN `1.1.25` 的版本、平台、下载来源和 `meta.mainProgram` 已确
 `docs/testing-host.md` 或 `docs/clis/*.md`。当前 Containerfile 的首轮宿主机步骤见
 [`docs/testing-host.md`](docs/testing-host.md)。
 
+当前已由 Fedora 宿主机验证镜像构建、空 Nix volume 初始化、两个 CLI 的 profile 安装与
+版本、第二次启动复用，以及首次安装不再出现 flake 配置授权提示。真实认证、自更新行为、
+部分 SELinux 挂载场景和 NVIDIA 仍待验证。
+
 ## 当前路线图
 
 - [x] 架构与安全边界定案
