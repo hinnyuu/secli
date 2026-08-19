@@ -88,12 +88,16 @@ install driver files; CDI still supplies them from the Fedora host.
 ## Result
 
 ```text
-Date: pending
-Host: pending
-Driver: pending
-Toolkit: pending
-CDI: pending
-Podman: pending
-secli --nvidia: pending
-Notes: pending
+Date: 2026-08-19
+Host: Fedora, amd64, SELinux Enforcing
+GPU: NVIDIA GeForce RTX 4060 Laptop GPU
+Driver: 610.57.04, CUDA UMD 13.3
+Toolkit: NVIDIA Container Toolkit CLI 1.19.1
+CDI: passed; GPU index, UUID and `nvidia.com/gpu=all` devices found
+Podman: 5.8.4 rootless
+secli --nvidia: passed; OpenCode printed complete native help and exited normally
+Notes: The first attempt failed because the minimal Nix image used a store-backed `/usr/share`
+symlink and CDI could not create `/usr/share/nvidia/nvoptix.bin`. Commit `e61a215` replaces that
+image-local symlink with writable FHS mount-point directories. The rebuilt image passed without
+errors; no host driver or CDI changes were required.
 ```

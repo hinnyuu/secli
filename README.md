@@ -332,8 +332,8 @@ Qoder CN `1.1.25` 的版本、平台、下载来源和 `meta.mainProgram` 已确
 [`docs/testing-host.md`](docs/testing-host.md)。
 
 当前已由 Fedora 宿主机验证镜像构建、空 Nix volume 初始化、两个 CLI 的 profile 安装与
-版本、第二次启动复用，以及首次安装不再出现 flake 配置授权提示。真实认证、自更新行为、
-部分 SELinux 挂载场景和 NVIDIA 仍待验证。
+版本、第二次启动复用、首次安装无配置授权提示、基础 SELinux 挂载、固定容器名并发拒绝
+和 NVIDIA CDI。真实认证、自更新行为和更完整的 SELinux/端口矩阵仍待验证。
 
 ## 当前路线图
 
@@ -345,7 +345,8 @@ Qoder CN `1.1.25` 的版本、平台、下载来源和 `meta.mainProgram` 已确
 - [x] Containerfile（静态实现，Fedora/CI 构建待验证）
 - [x] CI 与 tag release workflow（静态实现，需 GitHub 仓库验证）
 - [x] opencode、qoder-cli-cn manifest 和模板
-- [x] 自动测试与 Fedora 宿主机测试手册初稿；真实认证、SELinux 深度场景和 NVIDIA 仍待完成
+- [x] 自动测试与 Fedora 宿主机测试手册初稿；基础 NVIDIA 已验证，真实认证和 SELinux
+  深度场景仍待完成
 - [ ] 首个版本化发布（许可证文件由 GitHub 创建仓库时提供）
 
 实现按上述顺序拆成可独立验证的阶段；除非明确要求完整 v1，否则不把所有阶段合并成
