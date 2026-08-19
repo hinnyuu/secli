@@ -19,7 +19,7 @@ if rg -n '<FULL_COMMIT>|QODER_APPEND_SYSTEM_PROMPT|/root/\.qoder/' \
   fail "obsolete placeholder or Qoder path remains in documentation"
 fi
 
-if rg -n 'LICENSE（由 GitHub 创建仓库时生成）|Fedora/CI 构建待验证|需 GitHub 仓库验证' \
+if rg -n 'LICENSE（由 GitHub 创建仓库时生成）|Fedora/CI 构建待验证|需 GitHub 仓库验证|架构已定案，正在实现|## 计划中的(安装方式|用法)' \
   "$ROOT/AGENTS.md" "$ROOT/README.md"; then
   fail "completed repository or host state is still marked pending"
 fi

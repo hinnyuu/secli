@@ -64,7 +64,19 @@ Verified at the manifest commit:
   OpenCode Home.
 - Project, dataset, SELinux, port and NVIDIA mount behavior passed the host matrix.
 
-Native automatic-updater behavior remains a host integration test.
+Fedora release-candidate verification with a newly initialized Home confirmed:
+
+- the repository template is copied byte-for-byte before first start;
+- resolved config contains `autoupdate: false` and `share: disabled`;
+- the config remains unchanged after normal startup;
+- normal interactive startup does not add or change updater binary candidates under
+  `.cache/opencode/bin`;
+- PID 1 resolves to the Nix store `opencode-1.18.18` wrapper and its command line uses the dedicated
+  `secli-opencode` profile.
+
+An older test Home contained a schema-only config created before the current template. `init` did
+not overwrite it, as required by the no-overwrite contract. Template updates do not migrate an
+existing Home; users must compare and merge new recommendations manually.
 
 ## Automatic-updater test
 
@@ -104,3 +116,5 @@ Expected: the executable and command line use the Nix store/profile and do not r
 OpenCode binary under `/root`. A Nix wrapper may make `/proc/1/exe` resolve to Bash while cmdline
 contains the profile wrapper. Remove only the two temporary snapshot files after recording the
 result.
+
+Result: passed on Fedora amd64 during the final `v0.1.0-dev` release-candidate test.

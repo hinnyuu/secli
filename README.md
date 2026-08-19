@@ -3,10 +3,10 @@
 Secure Enhanced CLI：使用 Fedora 宿主机上的 rootless Podman 与容器内 Nix，为多个
 AI coding CLI 提供统一、隔离、可重建的运行环境。
 
-> **项目状态：架构已定案，正在实现。**
+> **项目状态：v0.1 实现和发布候选验证已完成，尚未正式发布。**
 >
-> 下文命令描述 v1 接口；在对应的 `secli.sh`、镜像和首发 manifest 完成前，尚未完成的
-> 命令还不能运行。
+> 当前 `VERSION` 仍为开发版本，默认远程镜像标签尚不存在；开发测试请通过 `SECLI_IMAGE`
+> 指向本地镜像。
 
 ## 为什么需要 secli
 
@@ -90,7 +90,7 @@ v1 的容器名固定为 `secli`，全局只允许一个实例。切换不同 CL
 
 主要部署方式不要求宿主机安装 Nix。Nix 位于运行镜像内。
 
-## 计划中的安装方式
+## 安装方式
 
 正式发布后，仓库版本、Git tag 和镜像不可变标签一一对应：
 
@@ -118,7 +118,7 @@ SECLI_IMAGE=ghcr.io/hinnyuu/secli:custom ./secli.sh opencode
 SECLI_IMAGE=localhost/secli:dev ./secli.sh opencode
 ```
 
-## 计划中的用法
+## 用法
 
 ```text
 secli.sh <cli> [secli 选项] [-- CLI 原生参数...]
@@ -333,7 +333,8 @@ v0.1 首发镜像只发布 `linux/amd64`。Flake 和 Nix CLI 包保留 `aarch64-
 
 两个首发 manifest 固定到同一个 `numtide/llm-agents.nix` commit。OpenCode `1.18.18` 和
 Qoder CN `1.1.25` 的版本、平台、下载来源和 `meta.mainProgram` 已确认并记录在
-`docs/clis/`。真实登录和 Home 持久化已在 Fedora 宿主机验证，自更新行为仍待实测。
+`docs/clis/`。真实登录、Home 持久化、全新 Home 模板生效和正常启动下的更新器行为已在
+Fedora 宿主机验证。
 
 完整 Podman、SELinux、named volume copy、真实登录和 NVIDIA 测试必须在 Fedora 宿主机
 人工执行。相关改动必须同时提供可复制命令、预期结果和清理步骤，并把结论记录到
@@ -343,7 +344,9 @@ Qoder CN `1.1.25` 的版本、平台、下载来源和 `meta.mainProgram` 已确
 当前已由 Fedora 宿主机验证镜像构建、空 Nix volume 初始化、两个 CLI 的 profile 安装与
 版本、第二次启动复用、首次安装无配置授权提示、基础 SELinux 挂载、固定容器名并发拒绝、
 NVIDIA CDI、项目/数据集读写边界、两个 CLI 的认证持久化以及 loopback/全网卡端口映射。
-原生自动更新关闭后的实际行为仍待最后验证。
+全新 Home 中原生自动更新关闭设置已生效，正常启动未修改 updater/shim 候选文件，实际
+进程始终来自 Nix profile。已有 Home 不会被新版模板覆盖；用户需要人工比较并合并新的
+推荐设置，这是 `init` 绝不覆盖用户文件的预期行为。
 
 ## 当前路线图
 
@@ -355,8 +358,8 @@ NVIDIA CDI、项目/数据集读写边界、两个 CLI 的认证持久化以及 
 - [x] Containerfile 与 Fedora 构建验证
 - [x] CI 与 tag release workflow；PR CI 已验证
 - [x] opencode、qoder-cli-cn manifest 和模板
-- [x] 自动测试与 Fedora 宿主机测试手册初稿；基础 NVIDIA、认证和挂载/端口矩阵已验证，
-  自更新和 SELinux 深度场景仍待完成
+- [x] 自动测试与 Fedora 宿主机测试手册；基础 NVIDIA、认证、挂载/端口矩阵和正常启动下
+  的 updater/shim 行为已验证
 - [ ] 首个版本化发布
 
 实现按上述顺序拆成可独立验证的阶段；除非明确要求完整 v1，否则不把所有阶段合并成
