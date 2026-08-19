@@ -139,6 +139,19 @@
             touch "$out"
           '';
 
+          containerfile-static = pkgs.runCommand "secli-containerfile-static" { } ''
+            grep -F 'FROM nixos/nix:2.35.1@sha256:377d4887aca98f0dfa12971c1ea6d6a625a435d8b610d4c95a436843da6fbfd1' ${./Containerfile}
+            grep -F 'nix profile install --profile /nix/var/nix/profiles/secli-base' ${./Containerfile}
+            grep -F 'github:NixOS/nixpkgs/ec2d622de0773551768cf98f3fc50cbcc003b9c5#git' ${./Containerfile}
+            grep -F 'github:NixOS/nixpkgs/ec2d622de0773551768cf98f3fc50cbcc003b9c5#ripgrep' ${./Containerfile}
+            ! grep -F 'nixpkgs#' ${./Containerfile}
+            grep -F 'COPY entrypoint.sh /entrypoint.sh' ${./Containerfile}
+            grep -F 'PATH=/nix/var/nix/profiles/secli-base/bin:/nix/var/nix/profiles/default/bin' ${./Containerfile}
+            grep -F 'ENTRYPOINT ["/entrypoint.sh"]' ${./Containerfile}
+            ! grep -E 'COPY (manifest|templates|state|LICENSE)' ${./Containerfile}
+            touch "$out"
+          '';
+
           package-smoke = pkgs.runCommand "secli-package-smoke" { } ''
             ${package}/bin/secli --help >output
             grep -F "Secure Enhanced CLI" output

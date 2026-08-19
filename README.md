@@ -325,7 +325,8 @@ Qoder CN `1.1.25` 的版本、平台、下载来源和 `meta.mainProgram` 已确
 
 完整 Podman、SELinux、named volume copy、真实登录和 NVIDIA 测试必须在 Fedora 宿主机
 人工执行。相关改动必须同时提供可复制命令、预期结果和清理步骤，并把结论记录到
-`docs/testing-host.md` 或 `docs/clis/*.md`。
+`docs/testing-host.md` 或 `docs/clis/*.md`。当前 Containerfile 的首轮宿主机步骤见
+[`docs/testing-host.md`](docs/testing-host.md)。
 
 ## 当前路线图
 
@@ -334,7 +335,8 @@ Qoder CN `1.1.25` 的版本、平台、下载来源和 `meta.mainProgram` 已确
 - [x] Flake 开发环境与基础检查
 - [x] 宿主机启动器 `secli.sh` 基础版本
 - [x] 容器 `entrypoint.sh` 与 Nix profile 对账基础版本
-- [ ] Containerfile 与发布 workflow
+- [x] Containerfile（静态实现，Fedora/CI 构建待验证）
+- [ ] CI 与 tag release workflow
 - [x] opencode、qoder-cli-cn manifest 和模板
 - [ ] 自动测试与 Fedora 宿主机测试手册
 - [ ] 首个版本化发布（许可证文件由 GitHub 创建仓库时提供）

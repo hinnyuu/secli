@@ -626,7 +626,7 @@ amend（除非用户明确要求）、破坏性 reset 和修改他人无关变�
 - [x] `flake.nix`、`flake.lock`、基础 checks
 - [x] `secli.sh` 与单元测试
 - [x] `entrypoint.sh` 与 profile/stamp 对账测试
-- [ ] Containerfile
+- [x] Containerfile
 - [x] opencode 与 qoder-cli-cn manifest
 - [x] 两套 Home 镜像模板
 - [x] CLI 档案初稿；安全、NVIDIA 和宿主机测试文档仍待完成
