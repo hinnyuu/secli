@@ -1,0 +1,12 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "autoupdate": false,
+  "share": "disabled",
+  "permission": {
+    "*": "ask",
+    "read": "allow",
+    "list": "allow",
+    "grep": "allow",
+    "glob": "allow"
+  }
+}

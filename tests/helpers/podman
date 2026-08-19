@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ ${1-} == container && ${2-} == exists ]]; then
+  [[ ${MOCK_CONTAINER_EXISTS:-false} == true ]]
+  exit
+fi
+
+if [[ ${1-} == image && ${2-} == exists ]]; then
+  [[ ${MOCK_IMAGE_EXISTS:-true} == true ]]
+  exit
+fi
+
+if [[ ${1-} == run ]]; then
+  index=0
+  for argument in "$@"; do
+    printf 'arg[%d]=<%s>\n' "$index" "$argument"
+    index=$((index + 1))
+  done
+  exit 0
+fi
+
+printf 'unexpected podman invocation:' >&2
+printf ' <%s>' "$@" >&2
+printf '\n' >&2
+exit 2
