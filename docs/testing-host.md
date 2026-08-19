@@ -153,7 +153,8 @@ Notes: Host cleanup completed. The expected "There are no packages in the profil
 
 ## Mount and port matrix
 
-Status: pending Fedora runtime verification.
+Status: project and dataset access verified; port mapping verified on Fedora; the probe was removed
+after testing.
 
 These checks use a temporary trusted local manifest that runs Nix's Bash instead of an AI CLI. It
 does not use credentials. Create the probe resources in the secli deployment:
@@ -259,6 +260,15 @@ wait "$secli_pid" 2>/dev/null || true
 
 Expected mapping: `0.0.0.0:4098`.
 
+Observed during the 2026-08-19 host test:
+
+- Project read/write probe passed.
+- Dataset read probe passed and dataset write failed with `Read-only file system`.
+- `-p 4097` published `127.0.0.1:4097`.
+- `-p 0.0.0.0:4098:4098` published `0.0.0.0:4098`.
+- The first attempt inherited an interactive terminal and was stopped by shell job control; the
+  commands above now redirect stdin/stdout for reliable background testing.
+
 Cleanup:
 
 ```bash
@@ -272,8 +282,8 @@ unset SECLI_IMAGE SECLI_STATE_DIR
 
 ## CLI authentication persistence
 
-Status: authenticated persistence verified for both CLIs; port mapping remains pending a clean
-background-process rerun.
+Status: authenticated persistence and port mapping verified for both CLIs/port forms; updater
+behavior remains pending.
 
 Do not paste credentials, tokens or login URLs into project files, test logs or issue reports.
 Test one CLI at a time using a dedicated temporary state root:

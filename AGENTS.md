@@ -633,8 +633,8 @@ amend（除非用户明确要求）、破坏性 reset 和修改他人无关变�
 - [x] Containerfile
 - [x] opencode 与 qoder-cli-cn manifest
 - [x] 两套 Home 镜像模板
-- [x] CLI 档案初稿、安全和 NVIDIA 文档；基础 SELinux/NVIDIA 宿主机测试已完成，挂载/端口
-  矩阵和更新器行为仍待完成，真实认证已验证
+- [x] CLI 档案初稿、安全和 NVIDIA 文档；基础 SELinux/NVIDIA 宿主机测试、挂载/端口矩阵
+  和真实认证已完成，更新器行为仍待完成
 - [x] CI 与 tag release workflow
 - [ ] LICENSE（由 GitHub 创建仓库时生成）
 - [x] VERSION
@@ -666,8 +666,8 @@ amend（除非用户明确要求）、破坏性 reset 和修改他人无关变�
 
 已验证：Fedora 宿主机上的镜像构建、空 `secli-nix-v1` 初始化、两个首发 profile 安装、
 OpenCode `1.18.18`、Qoder CN `1.1.25`、第二次启动 noop、固定 flake 配置的非交互安装、
-基础 SELinux 挂载、NVIDIA CDI、项目/数据集读写边界、两个 CLI 的认证和 Home 持久化。端口
-映射仍待干净后台测试。结果详见 `docs/testing-host.md` 和 `docs/nvidia.md`。
+基础 SELinux 挂载、NVIDIA CDI、项目/数据集读写边界、两个 CLI 的认证和 Home 持久化、
+loopback 与显式全网卡端口绑定。结果详见 `docs/testing-host.md` 和 `docs/nvidia.md`。
 
 这些是测试阶段的开放事实，不是重新讨论已定案架构的理由。发现新事实时，先记录证据，
 再最小化调整契约和本文档。
