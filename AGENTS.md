@@ -658,7 +658,7 @@ amend（除非用户明确要求）、破坏性 reset 和修改他人无关变�
 - [x] 两套 Home 镜像模板
 - [x] CLI 档案初稿、安全和 NVIDIA 文档；基础 SELinux/NVIDIA 宿主机测试、挂载/端口矩阵
   和真实认证已完成，更新器行为仍待完成
-- [x] CI 与 tag release workflow
+- [x] CI 与 tag release workflow；Actions 固定 commit，PR CI 构建 amd64 镜像
 - [x] LICENSE
 - [x] VERSION
 
@@ -684,7 +684,10 @@ amend（除非用户明确要求）、破坏性 reset 和修改他人无关变�
 - Qoder CN 原生更新器在模板设置生效后的实际行为；
 - opencode/Qoder 在 Nix profile 安装形态下是否创建替代二进制或 shim；
 - Fedora Podman 对 `/nix` 空 named volume 的 copy 行为和 epoch 升级流程；
-- 是否发布 `x86_64-linux` 与 `aarch64-linux` 多架构镜像，以及 CI runner 方案。
+- arm64 镜像的 Fedora 宿主机验证和 CI runner 方案。
+
+v0.1 首发镜像只发布 `linux/amd64`。Flake 和 Nix CLI 包保留 `aarch64-linux` 输出，但 arm64
+镜像不属于首发承诺，需完成对应 Fedora 宿主机验证和 CI runner 方案后再启用。
 
 已验证：Fedora 宿主机上的镜像构建、空 `secli-nix-v1` 初始化、两个首发 profile 安装、
 OpenCode `1.18.18`、Qoder CN `1.1.25`、第二次启动 noop、固定 flake 配置的非交互安装、

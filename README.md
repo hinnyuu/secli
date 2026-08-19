@@ -328,6 +328,9 @@ nix build
 `GITHUB_TOKEN` 推送 GHCR；Gitea Actions 是未来迁移目标，不维护第二套 workflow。当前
 LLM 开发容器没有 registry 凭据，不执行推送。
 
+v0.1 首发镜像只发布 `linux/amd64`。Flake 和 Nix CLI 包保留 `aarch64-linux` 输出，但 arm64
+镜像需完成对应 Fedora 宿主机验证和 CI runner 方案后再启用。
+
 两个首发 manifest 固定到同一个 `numtide/llm-agents.nix` commit。OpenCode `1.18.18` 和
 Qoder CN `1.1.25` 的版本、平台、下载来源和 `meta.mainProgram` 已确认并记录在
 `docs/clis/`。真实登录和 Home 持久化已在 Fedora 宿主机验证，自更新行为仍待实测。

@@ -158,9 +158,11 @@
           '';
 
           workflow-static = pkgs.runCommand "secli-workflow-static" {
-            nativeBuildInputs = [ pkgs.actionlint ];
+            nativeBuildInputs = [ pkgs.actionlint pkgs.bc pkgs.ripgrep ];
           } ''
             actionlint ${./.github/workflows/ci.yml} ${./.github/workflows/release-image.yml}
+            ! rg -n 'uses: .*@(main|master|v[0-9]+)$' ${./.github/workflows}
+            test "$(rg -c 'uses: .*@[0-9a-f]{40}' ${./.github/workflows} | cut -d: -f2 | paste -sd+ | bc)" -ge 8
             touch "$out"
           '';
 
