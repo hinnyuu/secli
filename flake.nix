@@ -21,6 +21,7 @@
               bats
               git
               jq
+              actionlint
               shellcheck
               shfmt
             ];
@@ -149,6 +150,13 @@
             grep -F 'PATH=/nix/var/nix/profiles/secli-base/bin:/nix/var/nix/profiles/default/bin' ${./Containerfile}
             grep -F 'ENTRYPOINT ["/entrypoint.sh"]' ${./Containerfile}
             ! grep -E 'COPY (manifest|templates|state|LICENSE)' ${./Containerfile}
+            touch "$out"
+          '';
+
+          workflow-static = pkgs.runCommand "secli-workflow-static" {
+            nativeBuildInputs = [ pkgs.actionlint ];
+          } ''
+            actionlint ${./.github/workflows/ci.yml} ${./.github/workflows/release-image.yml}
             touch "$out"
           '';
 

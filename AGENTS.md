@@ -488,7 +488,7 @@ packages.default
 checks
 ```
 
-- `devShells.default`：ShellCheck、Bats、shfmt，以及测试所需的 jq 等开发工具。
+- `devShells.default`：ShellCheck、Bats、shfmt、actionlint，以及测试所需的 jq 等开发工具。
 - `packages.default`：可执行的宿主机 secli 部署包，包含运行所需脚本和只读资源；用于
   `nix build` 后执行 `./result/bin/secli --help` 冒烟测试。
 - `checks`：shellcheck、格式、Bats、manifest 契约与模板布局检查。
@@ -630,8 +630,8 @@ amend（除非用户明确要求）、破坏性 reset 和修改他人无关变�
 - [x] Containerfile
 - [x] opencode 与 qoder-cli-cn manifest
 - [x] 两套 Home 镜像模板
-- [x] CLI 档案初稿；安全、NVIDIA 和宿主机测试文档仍待完成
-- [ ] CI 与 tag release workflow
+- [x] CLI 档案初稿、安全和 NVIDIA 文档；真实安全/NVIDIA 宿主机测试仍待完成
+- [x] CI 与 tag release workflow
 - [ ] LICENSE（由 GitHub 创建仓库时生成）
 - [x] VERSION
 

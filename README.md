@@ -315,7 +315,7 @@ nix build
 ./result/bin/secli --help
 ```
 
-计划中的检查包括 ShellCheck、shfmt、Bats、manifest 契约和模板布局。Podman 参数测试使用
+计划中的检查包括 ShellCheck、shfmt、actionlint、Bats、manifest 契约和模板布局。Podman 参数测试使用
 mock，不依赖当前开发容器内的嵌套 daemon。
 
 生产镜像由 `Containerfile` 定义。v1 只实现 GitHub Actions，并使用 workflow 的
@@ -343,9 +343,9 @@ Qoder CN `1.1.25` 的版本、平台、下载来源和 `meta.mainProgram` 已确
 - [x] 宿主机启动器 `secli.sh` 基础版本
 - [x] 容器 `entrypoint.sh` 与 Nix profile 对账基础版本
 - [x] Containerfile（静态实现，Fedora/CI 构建待验证）
-- [ ] CI 与 tag release workflow
+- [x] CI 与 tag release workflow（静态实现，需 GitHub 仓库验证）
 - [x] opencode、qoder-cli-cn manifest 和模板
-- [ ] 自动测试与 Fedora 宿主机测试手册
+- [x] 自动测试与 Fedora 宿主机测试手册初稿；真实认证、SELinux 深度场景和 NVIDIA 仍待完成
 - [ ] 首个版本化发布（许可证文件由 GitHub 创建仓库时提供）
 
 实现按上述顺序拆成可独立验证的阶段；除非明确要求完整 v1，否则不把所有阶段合并成
