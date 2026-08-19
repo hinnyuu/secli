@@ -139,7 +139,7 @@ source 它们等价于执行其中的 shell 代码。不要把 manifest 描述�
 # manifest/opencode.conf
 CLI_ID=opencode
 BIN=opencode
-INSTALL_REF="github:numtide/llm-agents.nix/<FULL_COMMIT>#opencode"
+INSTALL_REF="github:numtide/llm-agents.nix/c4c6673c4c1ceb69d845fa665a714e1273d0acac#opencode"
 RUNTIME_ENV=()
 ```
 
@@ -147,11 +147,8 @@ RUNTIME_ENV=()
 # manifest/qoder-cli-cn.conf
 CLI_ID=qoder-cli-cn
 BIN=qoderclicn
-INSTALL_REF="github:numtide/llm-agents.nix/<FULL_COMMIT>#qoder-cli-cn"
-# 该路径及缺失文件行为必须按目标版本实测。
-RUNTIME_ENV=(
-  "QODER_APPEND_SYSTEM_PROMPT=/root/.qoder/AGENTS.md"
-)
+INSTALL_REF="github:numtide/llm-agents.nix/c4c6673c4c1ceb69d845fa665a714e1273d0acac#qoder-cli-cn"
+RUNTIME_ENV=()
 ```
 
 字段契约：
@@ -171,8 +168,9 @@ RUNTIME_ENV=(
 - 环境变量名符合 shell 标识符规则；
 - 不允许字段通过路径穿越影响其他 CLI profile 或 Home。
 
-两个首发 CLI 使用同一个 numtide/llm-agents.nix commit。qoder-cli-cn 包由本组织在该仓库
-维护，其 `BIN` 是 `qoderclicn`。
+两个首发 CLI 使用同一个 numtide/llm-agents.nix commit。当前已确认的 pin 为
+`c4c6673c4c1ceb69d845fa665a714e1273d0acac`；OpenCode 包版本为 `1.18.18`，Qoder CN 包版本
+为 `1.1.25`。Qoder CN 包的 `BIN` 是 `qoderclicn`。
 
 ### 5.3 扩展一个 CLI
 
@@ -217,7 +215,7 @@ templates/
 │       ├── opencode.jsonc
 │       └── AGENTS.md
 └── qoder-cli-cn/
-    └── .qoder/
+    └── .qoder-cn/
         ├── settings.json
         └── AGENTS.md
 ```
@@ -406,8 +404,8 @@ secli 选项：
 自更新防线：
 
 1. 在 CLI 原生模板中关闭 auto-update；opencode 使用 `autoupdate: false`。
-2. Qoder 模板使用 `general.enableAutoUpdate: false`，并启用其原生安全选项，例如
-   `security.disableYoloMode: true`；准确字段须在目标版本实测。
+2. Qoder 模板使用 `general.enableAutoUpdate: false` 和
+   `security.disableYoloMode: true`；这两个字段已在 Qoder CN `1.1.25` 官方文档中确认。
 3. 始终从 secli 专用 profile 启动，不优先使用 CLI 下载到 Home 的副本。
 4. 每次启动按 `INSTALL_REF` 与 profile/stamp 对账。
 5. 在 CLI 档案中记录其更新器是否仍下载文件、创建 shim 或修改 PATH，并在 Fedora
@@ -629,9 +627,9 @@ amend（除非用户明确要求）、破坏性 reset 和修改他人无关变�
 - [x] `secli.sh` 与单元测试
 - [x] `entrypoint.sh` 与 profile/stamp 对账测试
 - [ ] Containerfile
-- [ ] opencode 与 qoder-cli-cn manifest
-- [ ] 两套 Home 镜像模板
-- [ ] CLI、安全、NVIDIA 和宿主机测试文档
+- [x] opencode 与 qoder-cli-cn manifest
+- [x] 两套 Home 镜像模板
+- [x] CLI 档案初稿；安全、NVIDIA 和宿主机测试文档仍待完成
 - [ ] CI 与 tag release workflow
 - [ ] LICENSE（由 GitHub 创建仓库时生成）
 - [x] VERSION
@@ -655,11 +653,8 @@ amend（除非用户明确要求）、破坏性 reset 和修改他人无关变�
 
 必须通过实践确认：
 
-- 实现 manifest 时只读查询 numtide/llm-agents.nix，选择同时包含两个首发包的同一个
-  完整 commit，并记录包版本、平台、下载来源和 `meta.mainProgram`；不得保留占位符或
-  短 commit hash；
-- qoder-cli-cn 的实际 Home 文件、登录流程和 `QODER_APPEND_SYSTEM_PROMPT` 缺失文件行为；
-- Qoder 当前版本的 settings 字段及禁用自更新是否完全有效；
+- qoder-cli-cn 在 Fedora 宿主机的实际登录流程、Home 持久化和配置生效行为；
+- Qoder CN 原生更新器在模板设置生效后的实际行为；
 - opencode/Qoder 在 Nix profile 安装形态下是否创建替代二进制或 shim；
 - Fedora Podman 对 `/nix` 空 named volume 的 copy 行为和 epoch 升级流程；
 - 是否发布 `x86_64-linux` 与 `aarch64-linux` 多架构镜像，以及 CI runner 方案。

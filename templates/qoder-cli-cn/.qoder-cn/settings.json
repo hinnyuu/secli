@@ -1,0 +1,9 @@
+{
+  "general": {
+    "enableAutoUpdate": false,
+    "defaultPermissionMode": "default"
+  },
+  "security": {
+    "disableYoloMode": true
+  }
+}

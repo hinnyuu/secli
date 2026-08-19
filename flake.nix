@@ -45,7 +45,11 @@
               install -D -m 644 AGENTS.md "$out/share/doc/secli/AGENTS.md"
               install -D -m 644 README.md "$out/share/doc/secli/README.md"
               mkdir -p "$out/libexec/secli/manifest" \
-                "$out/libexec/secli/templates"
+                "$out/libexec/secli/templates" \
+                "$out/share/doc/secli/clis"
+              cp -R manifest/. "$out/libexec/secli/manifest/"
+              cp -R templates/. "$out/libexec/secli/templates/"
+              cp -R docs/clis/. "$out/share/doc/secli/clis/"
               makeWrapper ${pkgs.bash}/bin/bash "$out/bin/secli" \
                 --add-flags "$out/libexec/secli/secli.sh" \
                 --prefix PATH : ${nixpkgs.lib.makeBinPath [ pkgs.coreutils pkgs.findutils ]}
@@ -107,9 +111,40 @@
             touch "$out"
           '';
 
+          manifest-layout = pkgs.runCommand "secli-manifest-layout" {
+            nativeBuildInputs = [ pkgs.bash pkgs.jq ];
+          } ''
+            shared_ref=
+            for cli in opencode qoder-cli-cn; do
+              manifest=${./manifest}/$cli.conf
+              test -f "$manifest"
+              CLI_ID= BIN= INSTALL_REF= RUNTIME_ENV=()
+              source "$manifest"
+              test "$CLI_ID" = "$cli"
+              test -n "$BIN"
+              [[ "$INSTALL_REF" =~ ^github:numtide/llm-agents\.nix/[0-9a-f]{40}#$cli$ ]]
+              [[ $(declare -p RUNTIME_ENV) == "declare -a "* ]]
+              current_ref=''${INSTALL_REF%#*}
+              if [[ -z $shared_ref ]]; then
+                shared_ref=$current_ref
+              else
+                test "$shared_ref" = "$current_ref"
+              fi
+              test -d ${./templates}/$cli
+            done
+            jq -e '.autoupdate == false and .share == "disabled"' \
+              ${./templates}/opencode/.config/opencode/opencode.jsonc >/dev/null
+            jq -e '.general.enableAutoUpdate == false and .security.disableYoloMode == true' \
+              ${./templates}/qoder-cli-cn/.qoder-cn/settings.json >/dev/null
+            touch "$out"
+          '';
+
           package-smoke = pkgs.runCommand "secli-package-smoke" { } ''
             ${package}/bin/secli --help >output
             grep -F "Secure Enhanced CLI" output
+            ${package}/bin/secli list >clis
+            grep -Fx opencode clis
+            grep -Fx qoder-cli-cn clis
             touch "$out"
           '';
         });

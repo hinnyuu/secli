@@ -259,7 +259,7 @@ podman volume rm secli-nix-v1
 ```bash
 CLI_ID=opencode
 BIN=opencode
-INSTALL_REF="github:numtide/llm-agents.nix/<FULL_COMMIT>#opencode"
+INSTALL_REF="github:numtide/llm-agents.nix/c4c6673c4c1ceb69d845fa665a714e1273d0acac#opencode"
 RUNTIME_ENV=()
 ```
 
@@ -267,8 +267,8 @@ RUNTIME_ENV=()
 根据安装引用 stamp 做幂等对账，不解析各 CLI 不一致的 `--version` 输出。
 
 `RUNTIME_ENV` 只描述 CLI 进程启动时需要的原生环境。entrypoint 在容器内导出变量后再
-执行 CLI，因此变量由 CLI 及其子进程继承，但不会污染宿主机 shell。例如 Qoder 可以通过
-它获得追加系统规则文件的路径。它不保存 token，也不属于 Nix profile。
+执行 CLI，因此变量由 CLI 及其子进程继承，但不会污染宿主机 shell。当前两个首发 CLI
+均不需要额外的启动环境变量；它不保存 token，也不属于 Nix profile。
 
 用户可以在被 `.gitignore` 排除的 `manifest.local/` 中提供完整覆盖。manifest 会被 Bash
 source，等价于执行代码，只能使用可信内容。
@@ -296,9 +296,10 @@ CLI 更新流程：
 -> 必要时提升 secli-nix-v<N> epoch
 ```
 
-推荐模板会关闭 CLI 原生自动更新。secli 始终优先执行 Nix profile 中的命令，不信任 CLI
-自行下载到 Home 中的替代二进制。Qoder 的实际自更新行为仍需要在目标版本和 Fedora
-宿主机上验证。
+推荐模板会关闭 CLI 原生自动更新。OpenCode 模板还关闭自动分享；Qoder CN 模板启用其
+原生 `security.disableYoloMode`。secli 始终优先执行 Nix profile 中的命令，不信任 CLI
+自行下载到 Home 中的替代二进制。Qoder CN 的配置字段已按 `1.1.25` 官方文档确认，实际
+自更新行为仍需要在 Fedora 宿主机上验证。
 
 ## 开发
 
@@ -318,9 +319,9 @@ mock，不依赖当前开发容器内的嵌套 daemon。
 `GITHUB_TOKEN` 推送 GHCR；Gitea Actions 是未来迁移目标，不维护第二套 workflow。当前
 LLM 开发容器没有 registry 凭据，不执行推送。
 
-实现首发 manifest 前允许并要求只读查询公开上游，确认两个包位于同一个固定 commit、
-记录版本、平台、下载来源和 `meta.mainProgram`。真实登录、Home 文件和自更新行为仍需
-Fedora 宿主机实测。
+两个首发 manifest 固定到同一个 `numtide/llm-agents.nix` commit。OpenCode `1.18.18` 和
+Qoder CN `1.1.25` 的版本、平台、下载来源和 `meta.mainProgram` 已确认并记录在
+`docs/clis/`。真实登录、Home 持久化和自更新行为仍需 Fedora 宿主机实测。
 
 完整 Podman、SELinux、named volume copy、真实登录和 NVIDIA 测试必须在 Fedora 宿主机
 人工执行。相关改动必须同时提供可复制命令、预期结果和清理步骤，并把结论记录到
@@ -334,7 +335,7 @@ Fedora 宿主机实测。
 - [x] 宿主机启动器 `secli.sh` 基础版本
 - [x] 容器 `entrypoint.sh` 与 Nix profile 对账基础版本
 - [ ] Containerfile 与发布 workflow
-- [ ] opencode、qoder-cli-cn manifest 和模板
+- [x] opencode、qoder-cli-cn manifest 和模板
 - [ ] 自动测试与 Fedora 宿主机测试手册
 - [ ] 首个版本化发布（许可证文件由 GitHub 创建仓库时提供）
 
