@@ -19,6 +19,7 @@
             packages = with pkgs; [
               bash
               bats
+              bc
               git
               jq
               actionlint
@@ -159,6 +160,14 @@
             nativeBuildInputs = [ pkgs.actionlint ];
           } ''
             actionlint ${./.github/workflows/ci.yml} ${./.github/workflows/release-image.yml}
+            touch "$out"
+          '';
+
+          documentation = pkgs.runCommand "secli-documentation" {
+            nativeBuildInputs = [ pkgs.bash pkgs.bc pkgs.ripgrep ];
+            SECLI_DOC_ROOT = self;
+          } ''
+            bash ${./tests/check-docs.sh}
             touch "$out"
           '';
 
