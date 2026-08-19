@@ -7,7 +7,7 @@ under the relevant section after testing.
 ## Development image and initial Nix volume
 
 Status: verified for image build, empty volume initialization, profile installation, repeat
-startup, authentication and mount behavior. Updater behavior remains pending.
+startup, authentication, mount behavior and normal-start updater stability.
 
 These steps validate the initial `Containerfile`, immutable base-image pin, `/nix` named-volume
 copy behavior and real installation of both CLI profiles. They use a temporary Home state root but
@@ -282,8 +282,7 @@ unset SECLI_IMAGE SECLI_STATE_DIR
 
 ## CLI authentication persistence
 
-Status: authenticated persistence and port mapping verified for both CLIs/port forms; updater
-behavior remains pending.
+Status: authenticated persistence, both port forms and normal-start updater stability verified.
 
 Do not paste credentials, tokens or login URLs into project files, test logs or issue reports.
 Test one CLI at a time using a dedicated temporary state root:
@@ -331,3 +330,21 @@ Observed during the 2026-08-19 host test:
   `.qoder-cn/entry/`, `.qoder-cn/projects/` and `.qodersec/`. These are expected Home state, not
   secli-managed paths.
 - No credentials were placed in manifests, templates or `/nix`.
+
+## Final release-candidate verification
+
+Status: passed on Fedora amd64 with a clean CLI state root and a newly created `secli-nix-v1`.
+
+The final `v0.1.0-dev` candidate was rebuilt from merged `main`. A clean `/tmp/secli-rc-state` was
+initialized with `secli.sh init all`; both configuration files matched their repository templates
+before first start. First profile installation reported OpenCode `1.18.18` and Qoder CN `1.1.25`,
+and repeat version checks were noops.
+
+OpenCode resolved `autoupdate: false` and `share: disabled`, retained its template unchanged, and
+did not change updater binary candidates after a normal interactive session. Qoder displayed
+`Enable Auto Update false`, retained both updater and YOLO-disable settings after repeated starts,
+and kept its native entry/runtime files byte-stable after first-run initialization. Both running
+processes resolved to their dedicated Nix store/profile paths rather than Home copies.
+
+All release-candidate steps completed without an automatic update, replacement binary or alternate
+Home-based startup path.

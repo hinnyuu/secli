@@ -77,7 +77,22 @@ Verified at the manifest commit:
   `.qodersec/`; secli still starts the Nix profile's absolute executable.
 - Project, dataset, SELinux, port and NVIDIA mount behavior passed the host matrix.
 
-Native automatic-updater behavior after settings are loaded remains a Fedora host test.
+Fedora release-candidate verification with a newly initialized Home confirmed:
+
+- the repository template is copied byte-for-byte before first start;
+- Qoder `/settings` shows `Enable Auto Update false` and the default permission mode;
+- `general.enableAutoUpdate: false` and `security.disableYoloMode: true` remain in `settings.json`
+  after repeated normal TUI starts;
+- Qoder may merge authentication, security scan and trusted-directory data into the same settings
+  file while preserving template fields;
+- `.qoder-cn/entry/` and `.qoder-cn/.bin/` are created as native first-run state, then remain
+  byte-stable across subsequent normal starts;
+- PID 1 resolves to the Nix store `qoder-cli-cn-1.1.25` binary and its command line uses the
+  dedicated `secli-qoder-cli-cn` profile.
+
+An older test Home was initialized before the current template and therefore used Qoder's default
+auto-update value. `init` correctly refused to overwrite that existing settings file. Template
+updates do not migrate existing Homes; users must compare and merge recommendations manually.
 
 ## Automatic-updater test
 
@@ -119,3 +134,7 @@ Expected: the executable and command line use the Nix store/profile and do not r
 `.qoder-cn/entry` or `.qoder-cn/.bin`. A Nix wrapper may make `/proc/1/exe` resolve to Bash while
 cmdline contains the profile wrapper. Remove only the two temporary snapshot files after recording
 the result.
+
+Result: passed on Fedora amd64 during the final `v0.1.0-dev` release-candidate test. Qoder's
+`config get` subcommand only exposed `vpc_endpoint` in `1.1.25`; `/settings` and persisted JSON were
+used to verify general and security settings.

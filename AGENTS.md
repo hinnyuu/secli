@@ -648,7 +648,7 @@ amend（除非用户明确要求）、破坏性 reset 和修改他人无关变�
 - [x] 仓库版本绑定不可变镜像标签
 - [x] `/nix` volume 使用独立兼容 epoch
 
-待实现：
+实施状态：
 
 - [x] `flake.nix`、`flake.lock`、基础 checks
 - [x] `secli.sh` 与单元测试
@@ -656,8 +656,8 @@ amend（除非用户明确要求）、破坏性 reset 和修改他人无关变�
 - [x] Containerfile
 - [x] opencode 与 qoder-cli-cn manifest
 - [x] 两套 Home 镜像模板
-- [x] CLI 档案初稿、安全和 NVIDIA 文档；基础 SELinux/NVIDIA 宿主机测试、挂载/端口矩阵
-  和真实认证已完成，更新器行为仍待完成
+- [x] CLI 档案、安全和 NVIDIA 文档；基础 SELinux/NVIDIA 宿主机测试、挂载/端口矩阵、
+  真实认证和正常启动下的更新器行为已完成
 - [x] CI 与 tag release workflow；Actions 固定 commit，PR CI 构建 amd64 镜像
 - [x] LICENSE
 - [x] VERSION
@@ -681,8 +681,6 @@ amend（除非用户明确要求）、破坏性 reset 和修改他人无关变�
 
 必须通过实践确认：
 
-- Qoder CN 原生更新器在模板设置生效后的实际行为；
-- opencode/Qoder 在 Nix profile 安装形态下是否创建替代二进制或 shim；
 - Fedora Podman 的 Nix volume epoch 升级流程；
 - arm64 镜像的 Fedora 宿主机验证和 CI runner 方案。
 
@@ -692,7 +690,8 @@ v0.1 首发镜像只发布 `linux/amd64`。Flake 和 Nix CLI 包保留 `aarch64-
 已验证：Fedora 宿主机上的镜像构建、空 `secli-nix-v1` 初始化、两个首发 profile 安装、
 OpenCode `1.18.18`、Qoder CN `1.1.25`、第二次启动 noop、固定 flake 配置的非交互安装、
 基础 SELinux 挂载、NVIDIA CDI、项目/数据集读写边界、两个 CLI 的认证和 Home 持久化、
-loopback 与显式全网卡端口绑定。结果详见 `docs/testing-host.md` 和 `docs/nvidia.md`。
+loopback 与显式全网卡端口绑定、全新 Home 模板生效和正常启动下的 updater/shim 稳定性。
+结果详见 `docs/testing-host.md`、`docs/nvidia.md` 和 `docs/clis/`。
 
 这些是测试阶段的开放事实，不是重新讨论已定案架构的理由。发现新事实时，先记录证据，
 再最小化调整契约和本文档。
