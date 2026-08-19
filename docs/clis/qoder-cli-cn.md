@@ -135,6 +135,6 @@ Expected: the executable and command line use the Nix store/profile and do not r
 cmdline contains the profile wrapper. Remove only the two temporary snapshot files after recording
 the result.
 
-Result: passed on Fedora amd64 during the final `v0.1.0-dev` release-candidate test. Qoder's
+Result: passed on Fedora amd64 during the final `v0.1.0` release-candidate test. Qoder's
 `config get` subcommand only exposed `vpc_endpoint` in `1.1.25`; `/settings` and persisted JSON were
 used to verify general and security settings.

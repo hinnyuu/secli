@@ -117,4 +117,4 @@ OpenCode binary under `/root`. A Nix wrapper may make `/proc/1/exe` resolve to B
 contains the profile wrapper. Remove only the two temporary snapshot files after recording the
 result.
 
-Result: passed on Fedora amd64 during the final `v0.1.0-dev` release-candidate test.
+Result: passed on Fedora amd64 during the final `v0.1.0` release-candidate test.

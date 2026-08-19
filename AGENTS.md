@@ -9,8 +9,8 @@
 
 ## 1. 当前状态
 
-本仓库目前处于**架构定案、正在实现**阶段。README 中的命令描述目标接口；在对应脚本、
-镜像和首发 manifest 完成前，尚未完成的命令仍不能运行。
+本仓库目前处于**v0.1 首次正式发布准备**阶段。README 描述已实现的 v1 用户接口；发布
+工作流和文档必须与仓库版本保持一致。
 
 实现阶段必须先创建 `flake.nix` 与 `flake.lock`，并通过 `nix develop` 进入开发环境；
 `flake.lock` 属于必须提交的交付文件。当前允许初始化本地 Git 仓库、创建本地分支和提交，
@@ -446,8 +446,8 @@ NVIDIA 驱动、nvidia-container-toolkit、`nvidia-ctk cdi generate`、Podman �
 
 ### 12.2 版本绑定
 
-- 仓库使用 `VERSION` 保存版本。首次实现写入 `v0.1.0-dev`；首次正式发布前改为
-  `v0.1.0`。
+- 仓库使用 `VERSION` 保存版本。正式发布版本为 `v0.1.0`，Git tag、GitHub Release 与
+  镜像不可变标签必须一致。
 - Git tag、GitHub Release 与镜像不可变标签必须一致。
 - `secli.sh` 默认使用 `ghcr.io/hinnyuu/secli:<VERSION>`。
 - `SECLI_IMAGE` 允许显式覆盖完整镜像引用。
@@ -455,8 +455,8 @@ NVIDIA 驱动、nvidia-container-toolkit、`nvidia-ctk cdi generate`、Podman �
 - 镜像应写入 OCI source、revision、version 等 labels。
 
 开发阶段 `secli.sh` 不隐式执行 `podman pull`；镜像不存在时直接报错，由用户手动 pull
-或通过 `SECLI_IMAGE` 指向本地开发镜像。开发版本不承诺存在同名远程镜像。Tag/release
-workflow 必须拒绝包含 `-dev` 的 `VERSION`，并验证它与 Git tag 一致。workflow 构建成功
+或通过 `SECLI_IMAGE` 指向本地镜像。Tag/release workflow 必须拒绝包含 `-dev` 的 `VERSION`，
+并验证它与 Git tag 一致。workflow 构建成功
 并推送镜像后才创建/公布 Release。manifest schema、启动器与 entrypoint 的不兼容变化
 必须随仓库/镜像版本一起发布。
 
