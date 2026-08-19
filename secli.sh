@@ -70,7 +70,6 @@ load_manifest() {
     die "unknown CLI '$requested_id'; run 'secli list' to show supported CLIs"
 
   unset CLI_ID BIN INSTALL_REF RUNTIME_ENV
-  RUNTIME_ENV=()
   # Manifests are trusted Bash code by contract.
   # shellcheck disable=SC1090
   source "$path"

@@ -39,7 +39,6 @@ load_manifest() {
     die "manifest for CLI '$requested_id' was not found"
 
   unset CLI_ID BIN INSTALL_REF RUNTIME_ENV
-  RUNTIME_ENV=()
   # Manifests are trusted Bash code by contract.
   # shellcheck disable=SC1090
   source "$path"

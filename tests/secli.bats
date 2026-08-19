@@ -30,7 +30,8 @@ setup() {
   run bash "$DEPLOY/secli.sh" list
 
   [ "$status" -eq 0 ]
-  [ "$output" = opencode ]
+  [[ $output == *opencode* ]]
+  [[ $output == *qoder-cli-cn* ]]
 }
 
 @test "manifest.local completely overrides the repository manifest" {
@@ -64,6 +65,44 @@ EOF
   [ "$(<"$config")" = user-owned ]
 }
 
+@test "init all creates each CLI Home" {
+  export SECLI_STATE_DIR="$BATS_TEST_TMPDIR/state"
+
+  run bash "$DEPLOY/secli.sh" init all
+
+  [ "$status" -eq 0 ]
+  [ -f "$SECLI_STATE_DIR/opencode/home/.config/opencode/opencode.jsonc" ]
+  [ -f "$SECLI_STATE_DIR/qoder-cli-cn/home/.qoder-cn/settings.json" ]
+}
+
+@test "manifest runtime environment must be an indexed array" {
+  cat >"$DEPLOY/manifest/qoder-cli-cn.conf" <<'EOF'
+CLI_ID=qoder-cli-cn
+BIN=qoderclicn
+INSTALL_REF="github:numtide/llm-agents.nix/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa#qoder-cli-cn"
+RUNTIME_ENV="NOT_AN_ARRAY=value"
+EOF
+
+  run bash "$DEPLOY/secli.sh" list
+
+  [ "$status" -eq 1 ]
+  [[ $output == *"RUNTIME_ENV must be a Bash array"* ]]
+}
+
+@test "manifest runtime environment validates variable names" {
+  cat >"$DEPLOY/manifest/qoder-cli-cn.conf" <<'EOF'
+CLI_ID=qoder-cli-cn
+BIN=qoderclicn
+INSTALL_REF="github:numtide/llm-agents.nix/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa#qoder-cli-cn"
+RUNTIME_ENV=("INVALID-NAME=value")
+EOF
+
+  run bash "$DEPLOY/secli.sh" list
+
+  [ "$status" -eq 1 ]
+  [[ $output == *"invalid environment variable name"* ]]
+}
+
 @test "run preserves paths and native CLI argument boundaries" {
   project="$BATS_TEST_TMPDIR/allowed/project with spaces"
   dataset="$BATS_TEST_TMPDIR/dataset with spaces"
@@ -79,6 +118,66 @@ EOF
   [[ $output == *"<$project:$project:rw,z>"* ]]
   [[ $output == *"<$dataset:$dataset:ro,z>"* ]]
   [[ $output == *"<127.0.0.1:4096:4096>"* ]]
+  [[ $output == *"<-p>"* ]]
+  [[ $output == *"<native prompt>"* ]]
+}
+
+@test "multiple datasets remain separate read-only mounts" {
+  project="$BATS_TEST_TMPDIR/allowed/project"
+  dataset_a="$BATS_TEST_TMPDIR/dataset a"
+  dataset_b="$BATS_TEST_TMPDIR/dataset b"
+  mkdir -p "$project" "$dataset_a" "$dataset_b"
+
+  run env \
+    SECLI_ALLOWED_PREFIXES="$BATS_TEST_TMPDIR/allowed" \
+    bash -c 'cd "$1" && exec bash "$2" opencode --dataset "$3" --dataset "$4"' \
+    _ "$project" "$DEPLOY/secli.sh" "$dataset_a" "$dataset_b"
+
+  [ "$status" -eq 0 ]
+  [[ $output == *"<$dataset_a:$dataset_a:ro,z>"* ]]
+  [[ $output == *"<$dataset_b:$dataset_b:ro,z>"* ]]
+}
+
+@test "explicit IPv4 port mapping is preserved" {
+  project="$BATS_TEST_TMPDIR/allowed/project"
+  mkdir -p "$project"
+
+  run env \
+    SECLI_ALLOWED_PREFIXES="$BATS_TEST_TMPDIR/allowed" \
+    bash -c 'cd "$1" && exec bash "$2" opencode -p 0.0.0.0:8080:4096' \
+    _ "$project" "$DEPLOY/secli.sh"
+
+  [ "$status" -eq 0 ]
+  [[ $output == *"<0.0.0.0:8080:4096>"* ]]
+}
+
+@test "invalid IPv4 and out-of-range ports are rejected" {
+  run bash "$DEPLOY/secli.sh" opencode -p 256.0.0.1:8080:4096
+  [ "$status" -eq 1 ]
+  [[ $output == *"invalid IPv4 address"* ]]
+
+  run bash "$DEPLOY/secli.sh" opencode -p 0.0.0.0:0:4096
+  [ "$status" -eq 1 ]
+  [[ $output == *"invalid host port"* ]]
+
+  run bash "$DEPLOY/secli.sh" opencode -p 0.0.0.0:8080:65536
+  [ "$status" -eq 1 ]
+  [[ $output == *"invalid container port"* ]]
+}
+
+@test "Qoder native short prompt option requires the separator" {
+  run bash "$DEPLOY/secli.sh" qoder-cli-cn -p "native prompt"
+
+  [ "$status" -eq 1 ]
+  [[ $output == *"expected an integer from 1 to 65535"* ]]
+
+  project="$BATS_TEST_TMPDIR/allowed/project"
+  mkdir -p "$project"
+  run env \
+    SECLI_ALLOWED_PREFIXES="$BATS_TEST_TMPDIR/allowed" \
+    bash -c 'cd "$1" && exec bash "$2" qoder-cli-cn -- -p "native prompt"' \
+    _ "$project" "$DEPLOY/secli.sh"
+  [ "$status" -eq 0 ]
   [[ $output == *"<-p>"* ]]
   [[ $output == *"<native prompt>"* ]]
 }

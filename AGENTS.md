@@ -553,6 +553,9 @@ secli/
 - entrypoint：profile/stamp 四种组合、安装失败、回滚、PATH 优先级。
 - 命令参数必须用 Bash 数组保存，测试包含空格、引号和以 `-` 开头的 CLI 参数。
 
+当前宿主机启动器和 entrypoint 的自动测试共覆盖 22 个场景；新增 manifest 字段或启动参数
+时必须同步扩展 Bats 覆盖。
+
 ### 15.2 Fedora 宿主机人工集成测试
 
 任何涉及 Podman、SELinux、named volume copy、NVIDIA、登录或真实 AI CLI 的变更，LLM

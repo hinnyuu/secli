@@ -315,8 +315,9 @@ nix build
 ./result/bin/secli --help
 ```
 
-计划中的检查包括 ShellCheck、shfmt、actionlint、Bats、manifest 契约和模板布局。Podman 参数测试使用
-mock，不依赖当前开发容器内的嵌套 daemon。
+检查包括 ShellCheck、shfmt、actionlint、Bats、manifest 契约和模板布局。当前 Bats 覆盖
+宿主机启动器和 entrypoint 的 22 个场景；Podman 参数测试使用 mock，不依赖当前开发容器内
+的嵌套 daemon。
 
 生产镜像由 `Containerfile` 定义。v1 只实现 GitHub Actions，并使用 workflow 的
 `GITHUB_TOKEN` 推送 GHCR；Gitea Actions 是未来迁移目标，不维护第二套 workflow。当前
