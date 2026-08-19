@@ -150,3 +150,161 @@ Base tools: passed; git `2.55.0`, ripgrep `15.2.0`
 Non-interactive first install: passed after commit `8bd588a`; no flake-config trust prompt appeared
 Notes: Host cleanup completed. The expected "There are no packages in the profile" warning is emitted while clearing a fresh profile and is non-fatal.
 ```
+
+## Mount and port matrix
+
+Status: pending Fedora runtime verification.
+
+These checks use a temporary trusted local manifest that runs Nix's Bash instead of an AI CLI. It
+does not use credentials. Create the probe resources in the secli deployment:
+
+```bash
+cd /data/projects/hinnyuu/secli
+mkdir -p manifest.local templates/probe
+cat >manifest.local/probe.conf <<'EOF'
+CLI_ID=probe
+BIN=bash
+INSTALL_REF="github:NixOS/nixpkgs/ec2d622de0773551768cf98f3fc50cbcc003b9c5#bash"
+RUNTIME_ENV=()
+EOF
+cat >templates/probe/probe.sh <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+mode=$1
+project=$2
+dataset=$3
+test "$(<"$project/project.txt")" = project
+test "$(<"$dataset/data.txt")" = dataset
+case $mode in
+  read)
+    ;;
+  project-write)
+    printf 'write-ok\n' >"$project/probe-write.txt"
+    ;;
+  dataset-write)
+    printf 'must-fail\n' >"$dataset/probe-write.txt"
+    ;;
+  *)
+    exit 2
+    ;;
+esac
+EOF
+chmod +x templates/probe/probe.sh
+```
+
+Prepare separate project and dataset directories:
+
+```bash
+mkdir -p /tmp/secli-matrix-project /tmp/secli-matrix-dataset
+printf 'project\n' >/tmp/secli-matrix-project/project.txt
+printf 'dataset\n' >/tmp/secli-matrix-dataset/data.txt
+export SECLI_IMAGE=localhost/secli:dev
+export SECLI_STATE_DIR=/tmp/secli-matrix-state
+./secli.sh init probe
+```
+
+Verify both mounts are readable and the project is writable:
+
+```bash
+cd /tmp/secli-matrix-project
+SECLI_ALLOWED_PREFIXES=/tmp/secli-matrix-project \
+  /data/projects/hinnyuu/secli/secli.sh probe \
+  --dataset /tmp/secli-matrix-dataset \
+  -- /root/probe.sh read /tmp/secli-matrix-project /tmp/secli-matrix-dataset
+SECLI_ALLOWED_PREFIXES=/tmp/secli-matrix-project \
+  /data/projects/hinnyuu/secli/secli.sh probe \
+  --dataset /tmp/secli-matrix-dataset \
+  -- /root/probe.sh project-write /tmp/secli-matrix-project /tmp/secli-matrix-dataset
+test "$(<probe-write.txt)" = write-ok
+```
+
+Verify the dataset write is rejected. This command must exit nonzero and the file must not exist:
+
+```bash
+if SECLI_ALLOWED_PREFIXES=/tmp/secli-matrix-project \
+  /data/projects/hinnyuu/secli/secli.sh probe \
+  --dataset /tmp/secli-matrix-dataset \
+  -- /root/probe.sh dataset-write /tmp/secli-matrix-project /tmp/secli-matrix-dataset; then
+  printf 'ERROR: read-only dataset write unexpectedly succeeded\n' >&2
+  exit 1
+fi
+test ! -e /tmp/secli-matrix-dataset/probe-write.txt
+```
+
+Verify the published address while a container is alive. Run this from the same project directory:
+
+```bash
+SECLI_ALLOWED_PREFIXES=/tmp/secli-matrix-project \
+  /data/projects/hinnyuu/secli/secli.sh probe -p 4097 -- -c 'sleep 30' &
+secli_pid=$!
+sleep 2
+podman port secli 4097/tcp
+kill "$secli_pid" 2>/dev/null || true
+wait "$secli_pid" 2>/dev/null || true
+```
+
+Expected mapping: `127.0.0.1:4097`. Repeat with explicit external exposure only when intended:
+
+```bash
+SECLI_ALLOWED_PREFIXES=/tmp/secli-matrix-project \
+  /data/projects/hinnyuu/secli/secli.sh probe -p 0.0.0.0:4098:4098 -- -c 'sleep 30' &
+secli_pid=$!
+sleep 2
+podman port secli 4098/tcp
+kill "$secli_pid" 2>/dev/null || true
+wait "$secli_pid" 2>/dev/null || true
+```
+
+Expected mapping: `0.0.0.0:4098`.
+
+Cleanup:
+
+```bash
+podman rm -f secli 2>/dev/null || true
+rm -rf /data/projects/hinnyuu/secli/manifest.local/probe.conf \
+  /data/projects/hinnyuu/secli/templates/probe \
+  /tmp/secli-matrix-project /tmp/secli-matrix-dataset /tmp/secli-matrix-state
+unset SECLI_IMAGE SECLI_STATE_DIR
+```
+
+## CLI authentication persistence
+
+Status: pending user-host verification.
+
+Do not paste credentials, tokens or login URLs into project files, test logs or issue reports.
+Test one CLI at a time using a dedicated temporary state root:
+
+```bash
+cd /data/projects/tests/test_proj_04
+export SECLI_IMAGE=localhost/secli:dev
+export SECLI_STATE_DIR=/tmp/secli-auth-state
+/data/projects/hinnyuu/secli/secli.sh init opencode
+/data/projects/hinnyuu/secli/secli.sh opencode
+```
+
+Complete OpenCode's native `/connect` flow, exit normally, restart it and verify it remains
+authenticated. Repeat for Qoder CN:
+
+```bash
+/data/projects/hinnyuu/secli/secli.sh init qoder-cli-cn
+/data/projects/hinnyuu/secli/secli.sh qoder-cli-cn
+```
+
+Use Qoder's native `/login` flow. In a headless container it should print a URL for manual browser
+completion. Do not put `QODERCN_PERSONAL_ACCESS_TOKEN` in a manifest or template; secli does not
+implicitly forward host environment variables into the container.
+
+After each CLI has been restarted successfully, inspect only relative filenames, not contents:
+
+```bash
+find /tmp/secli-auth-state/opencode/home -maxdepth 4 -type f -printf '%P\n' | sort
+find /tmp/secli-auth-state/qoder-cli-cn/home -maxdepth 4 -type f -printf '%P\n' | sort
+```
+
+Expected: state remains in the matching CLI Home and does not appear in the other CLI Home. Remove
+the temporary state only after deciding that its login state is no longer needed:
+
+```bash
+unset SECLI_IMAGE SECLI_STATE_DIR
+rm -rf /tmp/secli-auth-state
+```

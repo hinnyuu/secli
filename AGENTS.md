@@ -633,8 +633,8 @@ amend（除非用户明确要求）、破坏性 reset 和修改他人无关变�
 - [x] Containerfile
 - [x] opencode 与 qoder-cli-cn manifest
 - [x] 两套 Home 镜像模板
-- [x] CLI 档案初稿、安全和 NVIDIA 文档；基础 SELinux/NVIDIA 宿主机测试已完成，真实
-  认证和更新器行为仍待完成
+- [x] CLI 档案初稿、安全和 NVIDIA 文档；基础 SELinux/NVIDIA 宿主机测试已完成，挂载/端口
+  矩阵、真实认证和更新器行为仍待完成
 - [x] CI 与 tag release workflow
 - [ ] LICENSE（由 GitHub 创建仓库时生成）
 - [x] VERSION
