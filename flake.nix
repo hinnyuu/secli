@@ -146,6 +146,7 @@
             grep -F 'github:NixOS/nixpkgs/ec2d622de0773551768cf98f3fc50cbcc003b9c5#git' ${./Containerfile}
             grep -F 'github:NixOS/nixpkgs/ec2d622de0773551768cf98f3fc50cbcc003b9c5#ripgrep' ${./Containerfile}
             ! grep -F 'nixpkgs#' ${./Containerfile}
+            grep -F 'mkdir -p /usr/share/nvidia /usr/lib64 /usr/lib/nvidia /usr/local/nvidia' ${./Containerfile}
             grep -F 'COPY entrypoint.sh /entrypoint.sh' ${./Containerfile}
             grep -F 'PATH=/nix/var/nix/profiles/secli-base/bin:/nix/var/nix/profiles/default/bin' ${./Containerfile}
             grep -F 'ENTRYPOINT ["/entrypoint.sh"]' ${./Containerfile}

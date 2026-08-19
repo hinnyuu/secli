@@ -78,6 +78,13 @@ Disabling SELinux labeling is an intentional security reduction required by the 
 on the target setup. Do not treat GPU-enabled containers as equivalent to the default SELinux
 confined mode. Record the Fedora, driver, toolkit, CDI and Podman versions with every validation.
 
+## Implementation note
+
+The Nix base image is intentionally minimal and does not provide the usual FHS directories used
+as CDI mount targets. The Containerfile creates the NVIDIA mount-point directories, including
+`/usr/share/nvidia`, before runtime. It does not copy or install driver files; CDI still supplies
+those files from the Fedora host.
+
 ## Result
 
 ```text

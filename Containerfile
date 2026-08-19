@@ -7,7 +7,8 @@ ARG OCI_SOURCE=https://github.com/hinnyuu/secli
 RUN printf '%s\n' 'experimental-features = nix-command flakes' >> /etc/nix/nix.conf \
   && nix profile add --profile /nix/var/nix/profiles/secli-base \
     github:NixOS/nixpkgs/ec2d622de0773551768cf98f3fc50cbcc003b9c5#git \
-    github:NixOS/nixpkgs/ec2d622de0773551768cf98f3fc50cbcc003b9c5#ripgrep
+    github:NixOS/nixpkgs/ec2d622de0773551768cf98f3fc50cbcc003b9c5#ripgrep \
+  && mkdir -p /usr/share/nvidia /usr/lib64 /usr/lib/nvidia /usr/local/nvidia
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod 0555 /entrypoint.sh
