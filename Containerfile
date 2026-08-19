@@ -8,6 +8,7 @@ RUN printf '%s\n' 'experimental-features = nix-command flakes' >> /etc/nix/nix.c
   && nix profile add --profile /nix/var/nix/profiles/secli-base \
     github:NixOS/nixpkgs/ec2d622de0773551768cf98f3fc50cbcc003b9c5#git \
     github:NixOS/nixpkgs/ec2d622de0773551768cf98f3fc50cbcc003b9c5#ripgrep \
+  && if [ -L /usr/share ]; then rm /usr/share; fi \
   && mkdir -p /usr/share/nvidia /usr/lib64 /usr/lib/nvidia /usr/local/nvidia
 
 COPY entrypoint.sh /entrypoint.sh

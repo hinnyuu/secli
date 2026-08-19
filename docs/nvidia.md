@@ -80,10 +80,10 @@ confined mode. Record the Fedora, driver, toolkit, CDI and Podman versions with 
 
 ## Implementation note
 
-The Nix base image is intentionally minimal and does not provide the usual FHS directories used
-as CDI mount targets. The Containerfile creates the NVIDIA mount-point directories, including
-`/usr/share/nvidia`, before runtime. It does not copy or install driver files; CDI still supplies
-those files from the Fedora host.
+The Nix base image is intentionally minimal and its `/usr/share` entry may be a store-backed
+symlink. The Containerfile removes that image-local symlink, creates the FHS NVIDIA mount-point
+directories including `/usr/share/nvidia`, and leaves driver files to CDI. It does not copy or
+install driver files; CDI still supplies them from the Fedora host.
 
 ## Result
 
