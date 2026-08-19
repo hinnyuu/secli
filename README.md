@@ -332,7 +332,7 @@ Fedora 宿主机实测。
 - [x] 实现规格与用户 README
 - [x] Flake 开发环境与基础检查
 - [x] 宿主机启动器 `secli.sh` 基础版本
-- [ ] 容器 `entrypoint.sh` 与 Nix profile 对账
+- [x] 容器 `entrypoint.sh` 与 Nix profile 对账基础版本
 - [ ] Containerfile 与发布 workflow
 - [ ] opencode、qoder-cli-cn manifest 和模板
 - [ ] 自动测试与 Fedora 宿主机测试手册

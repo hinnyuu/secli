@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+[[ ${1-} == profile ]] || exit 2
+shift
+command_name=${1-}
+shift || true
+profile=
+while (($#)); do
+  if [[ $1 == --profile ]]; then
+    profile=$2
+    shift 2
+  else
+    shift
+  fi
+done
+
+[[ -n $profile ]] || exit 2
+mkdir -p "$profile/bin"
+
+case $command_name in
+  remove)
+    if [[ ${MOCK_NIX_REMOVE_FAIL:-false} == true ]]; then
+      exit 1
+    fi
+    rm -f "$profile/bin/opencode"
+    ;;
+  add)
+    printf 'add\n' >>"${MOCK_NIX_LOG:?}"
+    if [[ ${MOCK_NIX_ADD_FAIL:-false} == true ]]; then
+      rm -f "$profile/bin/opencode"
+      exit 1
+    fi
+    cat >"$profile/bin/opencode" <<'EOF'
+#!/usr/bin/env bash
+printf 'mock-cli runtime=%s args=' "${SECLI_TEST_RUNTIME-}"
+printf '<%s>' "$@"
+printf '\n'
+EOF
+    chmod +x "$profile/bin/opencode"
+    ;;
+  rollback)
+    printf 'rollback\n' >>"${MOCK_NIX_LOG:?}"
+    if [[ ${MOCK_NIX_ROLLBACK_FAIL:-false} == true ]]; then
+      exit 1
+    fi
+    cat >"$profile/bin/opencode" <<'EOF'
+#!/usr/bin/env bash
+printf 'rolled-back-cli args='
+printf '<%s>' "$@"
+printf '\n'
+EOF
+    chmod +x "$profile/bin/opencode"
+    ;;
+  *)
+    exit 2
+    ;;
+esac

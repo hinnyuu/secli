@@ -40,6 +40,7 @@
             installPhase = ''
               runHook preInstall
               install -D -m 755 secli.sh "$out/libexec/secli/secli.sh"
+              install -D -m 755 entrypoint.sh "$out/libexec/secli/entrypoint.sh"
               install -D -m 644 VERSION "$out/libexec/secli/VERSION"
               install -D -m 644 AGENTS.md "$out/share/doc/secli/AGENTS.md"
               install -D -m 644 README.md "$out/share/doc/secli/README.md"
@@ -68,14 +69,14 @@
           shellcheck = pkgs.runCommand "secli-shellcheck" {
             nativeBuildInputs = [ pkgs.shellcheck ];
           } ''
-            shellcheck ${./secli.sh} ${./tests/helpers/podman}
+            shellcheck ${./secli.sh} ${./entrypoint.sh} ${./tests/helpers/podman} ${./tests/helpers/nix}
             touch "$out"
           '';
 
           format = pkgs.runCommand "secli-format" {
             nativeBuildInputs = [ pkgs.shfmt ];
           } ''
-            shfmt -d -i 2 -ci ${./secli.sh} ${./tests/helpers/podman}
+            shfmt -d -i 2 -ci ${./secli.sh} ${./entrypoint.sh} ${./tests/helpers/podman} ${./tests/helpers/nix}
             touch "$out"
           '';
 
@@ -90,6 +91,19 @@
             export HOME="$TMPDIR/home"
             mkdir -p "$HOME"
             bats ${./tests/secli.bats}
+            touch "$out"
+          '';
+
+          entrypoint-bats = pkgs.runCommand "secli-entrypoint-bats" {
+            nativeBuildInputs = [ pkgs.bash pkgs.bats pkgs.coreutils pkgs.findutils ];
+            PATH = pkgs.lib.makeBinPath [ pkgs.bash pkgs.coreutils pkgs.findutils ];
+            SECLI_ENTRYPOINT = ./entrypoint.sh;
+            SECLI_ENTRYPOINT_MANIFEST = ./tests/fixtures/entrypoint/manifest/opencode.conf;
+            SECLI_NIX_MOCK = ./tests/helpers/nix;
+          } ''
+            export HOME="$TMPDIR/home"
+            mkdir -p "$HOME"
+            bats ${./tests/entrypoint.bats}
             touch "$out"
           '';
 
