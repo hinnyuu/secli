@@ -66,14 +66,56 @@ Qoder profile is reconciled and its stamp is updated after successful installati
 
 ## Verification status
 
-Verified in the development container at the manifest commit:
+Verified at the manifest commit:
 
 - Nix package builds successfully on `x86_64-linux`.
 - `qoderclicn --version` reports `1.1.25`.
 - `qoderclicn --help` runs with a temporary configuration directory.
 - A temporary run created Qoder runtime log files but no authentication state.
+- Fedora rootless Podman preserves Qoder authentication and sessions in the dedicated Home.
+- Qoder creates native Home entry/runtime files under `.qoder-cn/entry/`, `.qoder-cn/.bin/` and
+  `.qodersec/`; secli still starts the Nix profile's absolute executable.
+- Project, dataset, SELinux, port and NVIDIA mount behavior passed the host matrix.
 
-The following require Fedora host testing: browserless login completion, persisted credentials and
-sessions, SELinux mounts, named-volume behavior, native updater behavior after settings are loaded,
-and the actual `QODERCN_APPEND_SYSTEM_PROMPT` semantics if that environment variable is needed in a
-future template.
+Native automatic-updater behavior after settings are loaded remains a Fedora host test.
+
+## Automatic-updater test
+
+Do not run `qoderclicn update`; this test checks normal startup only. Verify the resolved native
+settings from a project directory:
+
+```bash
+export SECLI_IMAGE=localhost/secli:dev
+export SECLI_STATE_DIR=/tmp/secli-auth-state
+/data/projects/hinnyuu/secli/secli.sh qoder-cli-cn -- \
+  config get general.enableAutoUpdate
+/data/projects/hinnyuu/secli/secli.sh qoder-cli-cn -- \
+  config get security.disableYoloMode
+```
+
+Expected values: `false` and `true`.
+
+Snapshot Qoder's native entry/runtime candidates before and after one normal interactive session:
+
+```bash
+home="$SECLI_STATE_DIR/qoder-cli-cn/home"
+find "$home/.qoder-cn/entry" "$home/.qoder-cn/.bin" -type f \
+  -exec sha256sum {} + 2>/dev/null | sort > /tmp/secli-qoder-bin.before
+/data/projects/hinnyuu/secli/secli.sh qoder-cli-cn
+find "$home/.qoder-cn/entry" "$home/.qoder-cn/.bin" -type f \
+  -exec sha256sum {} + 2>/dev/null | sort > /tmp/secli-qoder-bin.after
+diff -u /tmp/secli-qoder-bin.before /tmp/secli-qoder-bin.after
+```
+
+Expected: normal startup does not replace these candidates with a newer CLI. Other Qoder session,
+log, model and cache files may change. While Qoder is running, inspect PID 1 from another terminal:
+
+```bash
+podman exec secli /bin/sh -c \
+  'readlink -f /proc/1/exe; tr "\0" " " </proc/1/cmdline; printf "\n"'
+```
+
+Expected: the executable and command line use the Nix store/profile and do not reference
+`.qoder-cn/entry` or `.qoder-cn/.bin`. A Nix wrapper may make `/proc/1/exe` resolve to Bash while
+cmdline contains the profile wrapper. Remove only the two temporary snapshot files after recording
+the result.

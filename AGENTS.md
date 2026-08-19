@@ -683,7 +683,7 @@ amend（除非用户明确要求）、破坏性 reset 和修改他人无关变�
 
 - Qoder CN 原生更新器在模板设置生效后的实际行为；
 - opencode/Qoder 在 Nix profile 安装形态下是否创建替代二进制或 shim；
-- Fedora Podman 对 `/nix` 空 named volume 的 copy 行为和 epoch 升级流程；
+- Fedora Podman 的 Nix volume epoch 升级流程；
 - arm64 镜像的 Fedora 宿主机验证和 CI runner 方案。
 
 v0.1 首发镜像只发布 `linux/amd64`。Flake 和 Nix CLI 包保留 `aarch64-linux` 输出，但 arm64
