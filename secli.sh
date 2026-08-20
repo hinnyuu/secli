@@ -3,7 +3,7 @@ set -euo pipefail
 
 BASE_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 readonly BASE_DIR
-readonly DEFAULT_PROJECT_PREFIXES="/data/projects:/data/test:/data/dataset"
+readonly DEFAULT_PROJECT_PREFIXES="/data/projects"
 readonly NIX_VOLUME="secli-nix-v1"
 readonly CONTAINER_NAME="secli"
 readonly CONFIG_SUPPORTED_KEYS="SECLI_ALLOWED_PROJECT_PREFIXES SECLI_IMAGE SECLI_STATE_DIR"

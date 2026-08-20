@@ -156,7 +156,8 @@ Qoder 自己的 `-p` 表示 prompt，而 secli 的 `-p` 表示端口，因此分
 
 ### 数据集
 
-数据集按原绝对路径只读挂载，可重复指定：
+数据集按原绝对路径只读挂载，可重复指定。数据集挂载不受项目白名单约束，只要求路径存在
+并完成规范化：
 
 ```bash
 ./secli.sh opencode \
@@ -195,12 +196,10 @@ v1 不支持端口范围、省略字段或 IPv6。
 任意位置，并通过自身路径查找 manifest、模板和版本；v1 不提供 `--project` 参数，也不
 自动猜测其他项目目录。
 
-当前工作目录经过物理路径规范化后必须位于默认白名单之一：
+当前工作目录经过物理路径规范化后必须位于默认白名单内：
 
 ```text
 /data/projects
-/data/test
-/data/dataset
 ```
 
 可用冒号分隔的环境变量整体覆盖：
@@ -228,7 +227,7 @@ cp config/secli.conf.example config/secli.conf
 
 ```text
 # config/secli.conf
-SECLI_ALLOWED_PROJECT_PREFIXES=/data/projects:/data/test
+SECLI_ALLOWED_PROJECT_PREFIXES=/data/projects:/tmp
 SECLI_IMAGE=localhost/secli:dev
 SECLI_STATE_DIR=/secure/path/secli-state
 ```
