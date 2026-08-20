@@ -356,12 +356,12 @@ secli 选项：
   目录的选择。
 - 当前工作目录必须先做物理路径规范化，再执行前缀白名单校验；校验失败立即拒绝启动，
   不猜测替代目录，也不自动扩大白名单。
-- 默认允许 `/data/projects`、`/data/test`、`/data/dataset`。
-- `SECLI_ALLOWED_PREFIXES` 以冒号分隔并整体覆盖默认值；环境变量优先于配置文件
+- 默认只允许 `/data/projects`。
+- `SECLI_ALLOWED_PROJECT_PREFIXES` 以冒号分隔并整体覆盖默认值；环境变量优先于配置文件
   `config/secli.conf` 中的同名键（见 §8.4）。
 - 前缀匹配必须尊重路径边界，`/data/projects-evil` 不属于 `/data/projects`。
 - 当前项目以同一绝对路径 `rw,z` 挂载，并作为容器工作目录。
-- 数据集必须存在且规范化，以同一绝对路径 `ro,z` 挂载。
+- 数据集必须存在且规范化，以同一绝对路径 `ro,z` 挂载；数据集挂载不受项目白名单约束。
 - `init`、`list` 和 secli 包装器 help 不启动 CLI，因此可以在白名单外执行，不得要求项目
   路径校验。CLI 原生 help `secli.sh <cli> -- --help` 会启动容器，仍按正常启动校验项目。
 
@@ -390,7 +390,7 @@ drop-in 目录（按文件名排序应用、后文件覆盖前文件）。配置
 
 当前支持的键与内置默认：
 
-- `SECLI_ALLOWED_PREFIXES`：项目路径白名单，默认 `/data/projects:/data/test:/data/dataset`；
+- `SECLI_ALLOWED_PROJECT_PREFIXES`：项目路径白名单，默认 `/data/projects`；
 - `SECLI_IMAGE`：完整镜像引用，默认 `ghcr.io/hinnyuu/secli:<VERSION>`；
 - `SECLI_STATE_DIR`：状态根，默认 `<部署根>/state`。
 
@@ -682,6 +682,7 @@ amend（除非用户明确要求）、破坏性 reset 和修改他人无关变�
 - [x] 仓库版本绑定不可变镜像标签
 - [x] `/nix` volume 使用独立兼容 epoch
 - [x] 集中宿主机配置文件 `config/secli.conf`，优先级 env > 配置 > 默认，仅 git clone 部署
+- [x] 项目白名单键更名 `SECLI_ALLOWED_PROJECT_PREFIXES`，默认收窄为 `/data/projects`
 
 实施状态：
 

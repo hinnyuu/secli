@@ -208,11 +208,11 @@ Verify both mounts are readable and the project is writable:
 
 ```bash
 cd /tmp/secli-matrix-project
-SECLI_ALLOWED_PREFIXES=/tmp/secli-matrix-project \
+SECLI_ALLOWED_PROJECT_PREFIXES=/tmp/secli-matrix-project \
   /data/projects/hinnyuu/secli/secli.sh probe \
   --dataset /tmp/secli-matrix-dataset \
   -- /root/probe.sh read /tmp/secli-matrix-project /tmp/secli-matrix-dataset
-SECLI_ALLOWED_PREFIXES=/tmp/secli-matrix-project \
+SECLI_ALLOWED_PROJECT_PREFIXES=/tmp/secli-matrix-project \
   /data/projects/hinnyuu/secli/secli.sh probe \
   --dataset /tmp/secli-matrix-dataset \
   -- /root/probe.sh project-write /tmp/secli-matrix-project /tmp/secli-matrix-dataset
@@ -222,7 +222,7 @@ test "$(<probe-write.txt)" = write-ok
 Verify the dataset write is rejected. This command must exit nonzero and the file must not exist:
 
 ```bash
-if SECLI_ALLOWED_PREFIXES=/tmp/secli-matrix-project \
+if SECLI_ALLOWED_PROJECT_PREFIXES=/tmp/secli-matrix-project \
   /data/projects/hinnyuu/secli/secli.sh probe \
   --dataset /tmp/secli-matrix-dataset \
   -- /root/probe.sh dataset-write /tmp/secli-matrix-project /tmp/secli-matrix-dataset; then
@@ -235,7 +235,7 @@ test ! -e /tmp/secli-matrix-dataset/probe-write.txt
 Verify the published address while a container is alive. Run this from the same project directory:
 
 ```bash
-SECLI_ALLOWED_PREFIXES=/tmp/secli-matrix-project \
+SECLI_ALLOWED_PROJECT_PREFIXES=/tmp/secli-matrix-project \
   /data/projects/hinnyuu/secli/secli.sh probe -p 4097 -- -c 'sleep 30' \
   </dev/null >/tmp/secli-port-4097.log 2>&1 &
 secli_pid=$!
@@ -248,7 +248,7 @@ wait "$secli_pid" 2>/dev/null || true
 Expected mapping: `127.0.0.1:4097`. Repeat with explicit external exposure only when intended:
 
 ```bash
-SECLI_ALLOWED_PREFIXES=/tmp/secli-matrix-project \
+SECLI_ALLOWED_PROJECT_PREFIXES=/tmp/secli-matrix-project \
   /data/projects/hinnyuu/secli/secli.sh probe -p 0.0.0.0:4098:4098 -- -c 'sleep 30' \
   </dev/null >/tmp/secli-port-4098.log 2>&1 &
 secli_pid=$!
@@ -333,7 +333,8 @@ Observed during the 2026-08-19 host test:
 
 ## Host launcher configuration file
 
-Status: pending host verification.
+Status: verified for whitelist override, environment precedence, state root redirection and
+invalid-key rejection.
 
 These steps validate the `config/secli.conf` host configuration file added in `v0.2.0-dev`:
 lookup, precedence over built-in defaults, environment-variable override and rejection of
@@ -358,7 +359,7 @@ Write a configuration file that whitelists only a temporary project directory:
 mkdir -p /tmp/secli-config-project
 printf 'project\n' >/tmp/secli-config-project/project.txt
 cat >config/secli.conf <<'EOF'
-SECLI_ALLOWED_PREFIXES=/tmp/secli-config-project
+SECLI_ALLOWED_PROJECT_PREFIXES=/tmp/secli-config-project
 SECLI_IMAGE=localhost/secli:dev
 SECLI_STATE_DIR=/tmp/secli-config-state
 EOF
@@ -381,7 +382,7 @@ Confirm the environment variable overrides the configuration file. A project onl
 configuration whitelists must be rejected once the environment takes over:
 
 ```bash
-SECLI_ALLOWED_PREFIXES=/tmp/elsewhere \
+SECLI_ALLOWED_PROJECT_PREFIXES=/tmp/elsewhere \
   /data/projects/hinnyuu/secli/secli.sh opencode -- --version
 ```
 
@@ -409,14 +410,15 @@ rm -rf /tmp/secli-config-project /tmp/secli-config-state
 Record the result here after host testing:
 
 ```text
-Date:
-Host architecture:
-Podman version:
-Whitelist override via config:
-Environment precedence over config:
-State root redirection via config:
-Invalid key rejection:
-Notes:
+Date: 2026-08-20
+Host architecture: Fedora host, amd64
+Podman version: verified >= 5.8.4
+Whitelist override via config: passed
+Environment precedence over config: passed
+State root redirection via config: passed
+Invalid key rejection: passed
+Notes: Host cleanup completed. Tested while the key was still named SECLI_ALLOWED_PREFIXES;
+it was renamed to SECLI_ALLOWED_PROJECT_PREFIXES within the same unreleased v0.2.0 cycle.
 ```
 
 ## Final release verification

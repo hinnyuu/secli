@@ -44,7 +44,7 @@ Environment variable > configuration file > built-in default.
 
 | Key | Meaning | Built-in default |
 | --- | --- | --- |
-| `SECLI_ALLOWED_PREFIXES` | Colon-separated absolute path prefixes for the project directory | `/data/projects:/data/test:/data/dataset` |
+| `SECLI_ALLOWED_PROJECT_PREFIXES` | Colon-separated absolute path prefixes for the project directory | `/data/projects` |
 | `SECLI_IMAGE` | Full image reference used by the host launcher | `ghcr.io/hinnyuu/secli:<VERSION>` |
 | `SECLI_STATE_DIR` | State root holding the per-CLI Homes | `<deployment root>/state` |
 
@@ -56,7 +56,7 @@ volume epoch are architectural constants and are not configurable.
 ## Example
 
 ```text
-SECLI_ALLOWED_PREFIXES=/data/projects:/data/test
+SECLI_ALLOWED_PROJECT_PREFIXES=/data/projects:/tmp
 SECLI_IMAGE=localhost/secli:dev
 SECLI_STATE_DIR=/secure/path/secli-state
 ```

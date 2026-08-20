@@ -3,12 +3,12 @@ set -euo pipefail
 
 BASE_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 readonly BASE_DIR
-readonly DEFAULT_ALLOWED_PREFIXES="/data/projects:/data/test:/data/dataset"
+readonly DEFAULT_PROJECT_PREFIXES="/data/projects"
 readonly NIX_VOLUME="secli-nix-v1"
 readonly CONTAINER_NAME="secli"
-readonly CONFIG_SUPPORTED_KEYS="SECLI_ALLOWED_PREFIXES SECLI_IMAGE SECLI_STATE_DIR"
+readonly CONFIG_SUPPORTED_KEYS="SECLI_ALLOWED_PROJECT_PREFIXES SECLI_IMAGE SECLI_STATE_DIR"
 
-CFG_ALLOWED_PREFIXES=""
+CFG_ALLOWED_PROJECT_PREFIXES=""
 CFG_IMAGE=""
 CFG_STATE_DIR=""
 
@@ -72,10 +72,10 @@ validate_config_prefixes() {
   local -a prefixes
   IFS=: read -r -a prefixes <<<"$value"
   ((${#prefixes[@]} > 0)) ||
-    config_error "$config_file" "$line_no" "SECLI_ALLOWED_PREFIXES must contain at least one path"
+    config_error "$config_file" "$line_no" "SECLI_ALLOWED_PROJECT_PREFIXES must contain at least one path"
   for prefix in "${prefixes[@]}"; do
     [[ -n $prefix ]] ||
-      config_error "$config_file" "$line_no" "SECLI_ALLOWED_PREFIXES contains an empty entry"
+      config_error "$config_file" "$line_no" "SECLI_ALLOWED_PROJECT_PREFIXES contains an empty entry"
     [[ $prefix == /* ]] ||
       config_error "$config_file" "$line_no" "allowed project prefix must be absolute: $prefix"
   done
@@ -83,7 +83,7 @@ validate_config_prefixes() {
 
 load_config() {
   local config_file line trimmed key value line_no
-  CFG_ALLOWED_PREFIXES=""
+  CFG_ALLOWED_PROJECT_PREFIXES=""
   CFG_IMAGE=""
   CFG_STATE_DIR=""
 
@@ -111,9 +111,9 @@ load_config() {
     [[ -n $value ]] ||
       config_error "$config_file" "$line_no" "configuration key '$key' must not be empty"
     case $key in
-      SECLI_ALLOWED_PREFIXES)
+      SECLI_ALLOWED_PROJECT_PREFIXES)
         validate_config_prefixes "$config_file" "$line_no" "$value"
-        CFG_ALLOWED_PREFIXES=$value
+        CFG_ALLOWED_PROJECT_PREFIXES=$value
         ;;
       SECLI_IMAGE)
         if [[ $value =~ [[:space:]] ]]; then
@@ -265,14 +265,14 @@ canonical_existing_path() {
 validate_project_path() {
   local project=$1 configured source prefix canonical_prefix
   local -a prefixes
-  if [[ -n ${SECLI_ALLOWED_PREFIXES-} ]]; then
-    configured=$SECLI_ALLOWED_PREFIXES
-    source="environment SECLI_ALLOWED_PREFIXES"
-  elif [[ -n $CFG_ALLOWED_PREFIXES ]]; then
-    configured=$CFG_ALLOWED_PREFIXES
+  if [[ -n ${SECLI_ALLOWED_PROJECT_PREFIXES-} ]]; then
+    configured=$SECLI_ALLOWED_PROJECT_PREFIXES
+    source="environment SECLI_ALLOWED_PROJECT_PREFIXES"
+  elif [[ -n $CFG_ALLOWED_PROJECT_PREFIXES ]]; then
+    configured=$CFG_ALLOWED_PROJECT_PREFIXES
     source="configuration file $(config_file_path)"
   else
-    configured=$DEFAULT_ALLOWED_PREFIXES
+    configured=$DEFAULT_PROJECT_PREFIXES
     source="built-in default"
   fi
   IFS=: read -r -a prefixes <<<"$configured"
