@@ -421,6 +421,29 @@ Notes: Host cleanup completed. Tested while the key was still named SECLI_ALLOWE
 it was renamed to SECLI_ALLOWED_PROJECT_PREFIXES within the same unreleased v0.2.0 cycle.
 ```
 
+## Clean-slate verification of the v0.2.0-dev launcher
+
+Status: passed on Fedora amd64 after full cleanup, image rebuild and empty-volume restart.
+
+This run verifies the launcher after the whitelist key rename to
+`SECLI_ALLOWED_PROJECT_PREFIXES` and the default narrowing to `/data/projects`. The host was
+fully cleaned first: the `secli` container, `secli-nix-v1`, `localhost/secli:dev`, the
+repository `state/`, `manifest.local/`, `config/secli.conf` and all `/tmp/secli-*` test
+directories were removed, then the image was rebuilt from the merged `main` and every step
+below started from an empty volume.
+
+Verified on 2026-08-20:
+
+- Image rebuild from the Containerfile and empty `secli-nix-v1` initialization passed.
+- OpenCode `1.18.18` and Qoder CN `1.1.25` installed from a clean volume.
+- Starting from `/data/projects` succeeded under the built-in default whitelist.
+- Starting from `/tmp` was rejected with the built-in default as the reported source.
+- `config/secli.conf` with `SECLI_ALLOWED_PROJECT_PREFIXES=/data/projects:/tmp` allowed a
+  `/tmp` project; the legacy key name `SECLI_ALLOWED_PREFIXES` was rejected as unknown.
+- The environment variable overrode the configuration file whitelist.
+- A dataset under `/tmp` mounted successfully while the whitelist stayed `/data/projects`,
+  confirming dataset mounts are independent of the project whitelist.
+
 ## Final release verification
 
 Status: passed on Fedora amd64 with a clean CLI state root and a newly created `secli-nix-v1`.

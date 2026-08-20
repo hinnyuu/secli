@@ -60,9 +60,10 @@ secli 由两个配套交付物组成：
 ```text
 Git 仓库                              GHCR 镜像
 ├── secli.sh                          ghcr.io/hinnyuu/secli:<version>
-├── manifest/                         ├── Nix
-├── templates/                        ├── git/ripgrep
-└── docs/                             └── entrypoint.sh
+├── config/                           ├── Nix
+├── manifest/                         ├── git/ripgrep
+├── templates/                        └── entrypoint.sh
+└── docs/
 ```
 
 宿主机上的 `secli.sh` 负责参数、路径和挂载；镜像内的 `entrypoint.sh` 负责安装并启动所选
@@ -332,8 +333,8 @@ entrypoint 对固定的 CLI flake ref 使用 `--accept-flake-config`，避免上
 
 推荐模板会关闭 CLI 原生自动更新。OpenCode 模板还关闭自动分享；Qoder CN 模板启用其
 原生 `security.disableYoloMode`。secli 始终优先执行 Nix profile 中的命令，不信任 CLI
-自行下载到 Home 中的替代二进制。Qoder CN 的配置字段已按 `1.1.25` 官方文档确认，实际
-自更新行为仍需要在 Fedora 宿主机上验证。
+自行下载到 Home 中的替代二进制。Qoder CN 的配置字段已按 `1.1.25` 官方文档确认，正常
+启动下的自更新行为已在 Fedora 宿主机验证（见 `docs/clis/qoder-cli-cn.md`）。
 
 ## 开发
 
@@ -370,7 +371,8 @@ Fedora 宿主机验证。
 
 当前已由 Fedora 宿主机验证镜像构建、空 Nix volume 初始化、两个 CLI 的 profile 安装与
 版本、第二次启动复用、首次安装无配置授权提示、基础 SELinux 挂载、固定容器名并发拒绝、
-NVIDIA CDI、项目/数据集读写边界、两个 CLI 的认证持久化以及 loopback/全网卡端口映射。
+NVIDIA CDI、项目/数据集读写边界、两个 CLI 的认证持久化、loopback/全网卡端口映射、
+宿主机配置文件的查找/优先级/校验，以及默认白名单收窄为 `/data/projects` 后的拒绝行为。
 全新 Home 中原生自动更新关闭设置已生效，正常启动未修改 updater/shim 候选文件，实际
 进程始终来自 Nix profile。已有 Home 不会被新版模板覆盖；用户需要人工比较并合并新的
 推荐设置，这是 `init` 绝不覆盖用户文件的预期行为。

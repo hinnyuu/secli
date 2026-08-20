@@ -96,7 +96,8 @@ secli 分为四个职责边界。
 
 entrypoint 负责：
 
-1. 初始化空 Home 中运行所需的基础目录，但不隐式复制推荐模板；
+1. 在共享 `/nix` 中创建对账所需的 profile 父目录与 stamp 目录；不在空 Home 中预置
+   任何内容，不隐式复制推荐模板；
 2. 根据 `SECLI_CLI` 加载并再次校验 manifest；
 3. 导出 manifest 声明的 `RUNTIME_ENV`，使最终 CLI 及其子进程继承；
 4. 在共享 `/nix` 中对当前 CLI 的独立 Nix profile 和 stamp 做幂等对账；
@@ -199,7 +200,7 @@ state/
 ```
 
 - `BASE_DIR` 必须由 `BASH_SOURCE[0]` 推导，仓库可移动。
-- `SECLI_STATE_DIR` 可整体覆盖默认状态根。
+- `SECLI_STATE_DIR`（环境变量或配置文件，见 §8.4）可整体覆盖默认状态根。
 - 状态根、CLI 目录和 Home 至少使用权限 `0700`。
 - `state/` 必须加入 `.gitignore`，不得进入 Nix 产物或镜像。
 - 不再使用共享 `secli-home` named volume。
@@ -476,7 +477,6 @@ NVIDIA 驱动、nvidia-container-toolkit、`nvidia-ctk cdi generate`、Podman �
 
 - 仓库使用 `VERSION` 保存版本。正式发布版本为 `v0.1.0`，Git tag、GitHub Release 与
   镜像不可变标签必须一致。
-- Git tag、GitHub Release 与镜像不可变标签必须一致。
 - `secli.sh` 默认使用 `ghcr.io/hinnyuu/secli:<VERSION>`。
 - `SECLI_IMAGE` 允许显式覆盖完整镜像引用。
 - `latest`/`stable` 可以作为便利别名，但启动器不得默认依赖移动标签。
@@ -636,8 +636,8 @@ LLM 容器没有 GitHub/GHCR 凭据：
 
 - push、PR、Issue、Release、仓库设置和 registry 推送由宿主机或 CI 完成；
 - 不得在容器内写入或索要凭据；
-- 本地 Git 初始化、分支、暂存和提交可以在容器内执行，不配置用户级 Git 身份或 remote；
-  向 GitHub 提交时由用户在宿主机执行具体命令。
+- 本地 Git 初始化、分支、暂存和提交可以在容器内执行，不配置用户级（全局）Git 身份或
+  remote；提交可使用仓库级身份。向 GitHub 提交时由用户在宿主机执行具体命令。
 
 提交使用 Conventional Commits，分支使用 `<type>/<kebab-desc>`。多步实现走 feature 分支。
 提交前展示 `git status` 和 `git diff`，逐路径暂存，不使用 `git add -A`。禁止 force push、
@@ -726,7 +726,8 @@ v0.1 首发镜像只发布 `linux/amd64`。Flake 和 Nix CLI 包保留 `aarch64-
 已验证：Fedora 宿主机上的镜像构建、空 `secli-nix-v1` 初始化、两个首发 profile 安装、
 OpenCode `1.18.18`、Qoder CN `1.1.25`、第二次启动 noop、固定 flake 配置的非交互安装、
 基础 SELinux 挂载、NVIDIA CDI、项目/数据集读写边界、两个 CLI 的认证和 Home 持久化、
-loopback 与显式全网卡端口绑定、全新 Home 模板生效和正常启动下的 updater/shim 稳定性。
+loopback 与显式全网卡端口绑定、全新 Home 模板生效、正常启动下的 updater/shim 稳定性、
+宿主机配置文件的查找/优先级/校验，以及默认白名单收窄后从白名单外启动被拒绝。
 结果详见 `docs/testing-host.md`、`docs/nvidia.md` 和 `docs/clis/`。
 
 这些是测试阶段的开放事实，不是重新讨论已定案架构的理由。发现新事实时，先记录证据，
