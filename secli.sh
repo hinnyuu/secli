@@ -6,6 +6,11 @@ readonly BASE_DIR
 readonly DEFAULT_ALLOWED_PREFIXES="/data/projects:/data/test:/data/dataset"
 readonly NIX_VOLUME="secli-nix-v1"
 readonly CONTAINER_NAME="secli"
+readonly CONFIG_SUPPORTED_KEYS="SECLI_ALLOWED_PREFIXES SECLI_IMAGE SECLI_STATE_DIR"
+
+CFG_ALLOWED_PREFIXES=""
+CFG_IMAGE=""
+CFG_STATE_DIR=""
 
 die() {
   printf 'secli: error: %s\n' "$*" >&2
@@ -28,6 +33,10 @@ Options:
   --nvidia          Enable all NVIDIA CDI devices and disable SELinux labels
   -h, --help        Show secli wrapper help
 
+Configuration:
+  Defaults are read from config/secli.conf when present; environment
+  variables override configuration values. See docs/config.md.
+
 Use "secli <cli> -- --help" for the selected CLI's native help.
 EOF
 }
@@ -40,6 +49,87 @@ Usage: secli $cli_id [secli options] [-- CLI arguments...]
 The -- separator is required before native CLI arguments.
 For example: secli $cli_id -- --help
 EOF
+}
+
+trim_whitespace() {
+  local value=$1
+  value=${value#"${value%%[![:space:]]*}"}
+  value=${value%"${value##*[![:space:]]}"}
+  printf '%s\n' "$value"
+}
+
+config_file_path() {
+  printf '%s\n' "${SECLI_CONFIG:-$BASE_DIR/config/secli.conf}"
+}
+
+config_error() {
+  local config_file=$1 line_no=$2 reason=$3
+  die "configuration file '$config_file' line $line_no: $reason"
+}
+
+validate_config_prefixes() {
+  local config_file=$1 line_no=$2 value=$3 prefix
+  local -a prefixes
+  IFS=: read -r -a prefixes <<<"$value"
+  ((${#prefixes[@]} > 0)) ||
+    config_error "$config_file" "$line_no" "SECLI_ALLOWED_PREFIXES must contain at least one path"
+  for prefix in "${prefixes[@]}"; do
+    [[ -n $prefix ]] ||
+      config_error "$config_file" "$line_no" "SECLI_ALLOWED_PREFIXES contains an empty entry"
+    [[ $prefix == /* ]] ||
+      config_error "$config_file" "$line_no" "allowed project prefix must be absolute: $prefix"
+  done
+}
+
+load_config() {
+  local config_file line trimmed key value line_no
+  CFG_ALLOWED_PREFIXES=""
+  CFG_IMAGE=""
+  CFG_STATE_DIR=""
+
+  config_file=$(config_file_path)
+  if [[ ! -e $config_file ]]; then
+    [[ -z ${SECLI_CONFIG-} ]] && return 0
+    die "SECLI_CONFIG points to a missing file: $config_file"
+  fi
+  [[ -f $config_file && -r $config_file ]] ||
+    die "configuration file is not a readable regular file: $config_file"
+
+  line_no=0
+  # The loop only reads "$config_file"; helpers receive the path as data.
+  # shellcheck disable=SC2094
+  while IFS= read -r line || [[ -n $line ]]; do
+    line_no=$((line_no + 1))
+    trimmed=$(trim_whitespace "$line")
+    [[ -z $trimmed || $trimmed == \#* ]] && continue
+    [[ $trimmed == *=* ]] ||
+      config_error "$config_file" "$line_no" "expected SECLI_KEY=value"
+    key=$(trim_whitespace "${trimmed%%=*}")
+    value=$(trim_whitespace "${trimmed#*=}")
+    [[ $key =~ ^SECLI_[A-Z0-9_]+$ ]] ||
+      config_error "$config_file" "$line_no" "invalid configuration key '$key'"
+    [[ -n $value ]] ||
+      config_error "$config_file" "$line_no" "configuration key '$key' must not be empty"
+    case $key in
+      SECLI_ALLOWED_PREFIXES)
+        validate_config_prefixes "$config_file" "$line_no" "$value"
+        CFG_ALLOWED_PREFIXES=$value
+        ;;
+      SECLI_IMAGE)
+        if [[ $value =~ [[:space:]] ]]; then
+          config_error "$config_file" "$line_no" "SECLI_IMAGE must not contain whitespace"
+        fi
+        CFG_IMAGE=$value
+        ;;
+      SECLI_STATE_DIR)
+        CFG_STATE_DIR=$value
+        ;;
+      *)
+        config_error "$config_file" "$line_no" \
+          "unknown configuration key '$key'; supported keys: $CONFIG_SUPPORTED_KEYS"
+        ;;
+    esac
+  done <"$config_file"
 }
 
 valid_cli_id() {
@@ -123,7 +213,7 @@ list_clis() {
 }
 
 state_root() {
-  local configured=${SECLI_STATE_DIR:-"$BASE_DIR/state"}
+  local configured=${SECLI_STATE_DIR:-${CFG_STATE_DIR:-$BASE_DIR/state}}
   mkdir -p -- "$configured"
   chmod 700 -- "$configured"
   realpath -e -- "$configured"
@@ -173,11 +263,20 @@ canonical_existing_path() {
 }
 
 validate_project_path() {
-  local project=$1 configured prefix canonical_prefix
+  local project=$1 configured source prefix canonical_prefix
   local -a prefixes
-  configured=${SECLI_ALLOWED_PREFIXES:-$DEFAULT_ALLOWED_PREFIXES}
+  if [[ -n ${SECLI_ALLOWED_PREFIXES-} ]]; then
+    configured=$SECLI_ALLOWED_PREFIXES
+    source="environment SECLI_ALLOWED_PREFIXES"
+  elif [[ -n $CFG_ALLOWED_PREFIXES ]]; then
+    configured=$CFG_ALLOWED_PREFIXES
+    source="configuration file $(config_file_path)"
+  else
+    configured=$DEFAULT_ALLOWED_PREFIXES
+    source="built-in default"
+  fi
   IFS=: read -r -a prefixes <<<"$configured"
-  ((${#prefixes[@]} > 0)) || die "SECLI_ALLOWED_PREFIXES must contain an absolute path"
+  ((${#prefixes[@]} > 0)) || die "allowed project prefixes must contain an absolute path"
 
   for prefix in "${prefixes[@]}"; do
     [[ $prefix == /* ]] || die "allowed project prefix must be absolute: $prefix"
@@ -186,7 +285,7 @@ validate_project_path() {
       return 0
     fi
   done
-  die "project '$project' is outside SECLI_ALLOWED_PREFIXES='$configured'"
+  die "project '$project' is outside allowed prefixes '$configured' ($source)"
 }
 
 valid_port_number() {
@@ -228,7 +327,7 @@ normalize_port() {
 run_cli() {
   local cli_id=$1
   shift
-  local dataset project home root image port_spec
+  local dataset project home root image version port_spec
   local -a datasets=() ports=() cli_arguments=() podman_args
   local nvidia=false
 
@@ -283,8 +382,8 @@ run_cli() {
   fi
 
   [[ -f $BASE_DIR/VERSION ]] || die "VERSION is missing from deployment root '$BASE_DIR'"
-  IFS= read -r image <"$BASE_DIR/VERSION"
-  image=${SECLI_IMAGE:-"ghcr.io/hinnyuu/secli:$image"}
+  IFS= read -r version <"$BASE_DIR/VERSION"
+  image=${SECLI_IMAGE:-${CFG_IMAGE:-ghcr.io/hinnyuu/secli:$version}}
   podman image exists "$image" ||
     die "image '$image' is not available; pull it manually or set SECLI_IMAGE"
 
@@ -320,10 +419,13 @@ run_cli() {
 
 main() {
   local command=${1-}
+  if [[ -z $command || $command == -h || $command == --help ]]; then
+    print_help
+    return 0
+  fi
+
+  load_config
   case $command in
-    "" | -h | --help)
-      print_help
-      ;;
     init)
       shift
       init_command "$@"

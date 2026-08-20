@@ -1,0 +1,27 @@
+# secli host launcher configuration example.
+#
+# Copy this file to config/secli.conf and uncomment the keys you want to
+# change. The configuration file applies to the git clone deployment; the
+# Nix package deployment is configured through environment variables.
+# See docs/config.md for the full reference.
+#
+# Format rules:
+#   - one SECLI_KEY=value assignment per line
+#   - empty lines and lines starting with '#' are ignored
+#   - unknown keys are rejected
+#   - later assignments override earlier ones
+#
+# Precedence: environment variable > configuration file > built-in default.
+
+# Project directory whitelist, colon-separated absolute paths.
+# Default: /data/projects:/data/test:/data/dataset
+#SECLI_ALLOWED_PREFIXES=/data/projects:/data/test:/data/dataset
+
+# Full image reference used by the host launcher.
+# Default: ghcr.io/hinnyuu/secli:<VERSION>, where <VERSION> is read from
+# the VERSION file in the deployment root.
+#SECLI_IMAGE=localhost/secli:dev
+
+# State root holding the per-CLI Homes.
+# Default: <deployment root>/state
+#SECLI_STATE_DIR=/secure/path/secli-state

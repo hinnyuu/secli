@@ -46,6 +46,7 @@
               install -D -m 644 VERSION "$out/libexec/secli/VERSION"
               install -D -m 644 AGENTS.md "$out/share/doc/secli/AGENTS.md"
               install -D -m 644 README.md "$out/share/doc/secli/README.md"
+              install -D -m 644 config/secli.conf.example "$out/share/doc/secli/secli.conf.example"
               mkdir -p "$out/libexec/secli/manifest" \
                 "$out/libexec/secli/templates" \
                 "$out/share/doc/secli/clis"
