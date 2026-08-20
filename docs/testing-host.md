@@ -333,7 +333,8 @@ Observed during the 2026-08-19 host test:
 
 ## Host launcher configuration file
 
-Status: pending host verification.
+Status: verified for whitelist override, environment precedence, state root redirection and
+invalid-key rejection.
 
 These steps validate the `config/secli.conf` host configuration file added in `v0.2.0-dev`:
 lookup, precedence over built-in defaults, environment-variable override and rejection of
@@ -409,14 +410,15 @@ rm -rf /tmp/secli-config-project /tmp/secli-config-state
 Record the result here after host testing:
 
 ```text
-Date:
-Host architecture:
-Podman version:
-Whitelist override via config:
-Environment precedence over config:
-State root redirection via config:
-Invalid key rejection:
-Notes:
+Date: 2026-08-20
+Host architecture: Fedora host, amd64
+Podman version: verified >= 5.8.4
+Whitelist override via config: passed
+Environment precedence over config: passed
+State root redirection via config: passed
+Invalid key rejection: passed
+Notes: Host cleanup completed. Tested while the key was still named SECLI_ALLOWED_PREFIXES;
+it was renamed to SECLI_ALLOWED_PROJECT_PREFIXES within the same unreleased v0.2.0 cycle.
 ```
 
 ## Final release verification
