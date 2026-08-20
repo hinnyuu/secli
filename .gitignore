@@ -2,3 +2,5 @@
 /result-*
 /manifest.local/
 /state/
+/config/*
+!/config/secli.conf.example

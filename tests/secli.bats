@@ -192,7 +192,7 @@ EOF
     bash -c 'cd "$1" && exec bash "$2" opencode' _ "$project" "$DEPLOY/secli.sh"
 
   [ "$status" -eq 1 ]
-  [[ $output == *"outside SECLI_ALLOWED_PREFIXES"* ]]
+  [[ $output == *"outside allowed prefixes"* ]]
 }
 
 @test "invalid port suggests placing native options after the separator" {
@@ -234,4 +234,95 @@ EOF
   [ "$status" -eq 1 ]
   [[ $output == *"pull it manually or set SECLI_IMAGE"* ]]
   [[ $output != *"unexpected podman invocation"* ]]
+}
+
+@test "config file overrides the default project whitelist" {
+  project="$BATS_TEST_TMPDIR/custom-whitelist/project"
+  mkdir -p "$project" "$DEPLOY/config"
+  printf 'SECLI_ALLOWED_PREFIXES=%s/custom-whitelist\n' "$BATS_TEST_TMPDIR" \
+    >"$DEPLOY/config/secli.conf"
+
+  run env \
+    SECLI_STATE_DIR="$BATS_TEST_TMPDIR/state" \
+    bash -c 'cd "$1" && exec bash "$2" opencode' _ "$project" "$DEPLOY/secli.sh"
+
+  [ "$status" -eq 0 ]
+  [[ $output == *"<$project:$project:rw,z>"* ]]
+}
+
+@test "environment variables override configuration file values" {
+  project="$BATS_TEST_TMPDIR/env-allowed/project"
+  config_project="$BATS_TEST_TMPDIR/config-only/project"
+  mkdir -p "$project" "$config_project" "$DEPLOY/config"
+  printf 'SECLI_ALLOWED_PREFIXES=%s/config-only\n' "$BATS_TEST_TMPDIR" \
+    >"$DEPLOY/config/secli.conf"
+
+  run env \
+    SECLI_ALLOWED_PREFIXES="$BATS_TEST_TMPDIR/env-allowed" \
+    bash -c 'cd "$1" && exec bash "$2" opencode' _ "$project" "$DEPLOY/secli.sh"
+  [ "$status" -eq 0 ]
+
+  run env \
+    SECLI_ALLOWED_PREFIXES="$BATS_TEST_TMPDIR/env-allowed" \
+    bash -c 'cd "$1" && exec bash "$2" opencode' _ "$config_project" "$DEPLOY/secli.sh"
+  [ "$status" -eq 1 ]
+  [[ $output == *"outside allowed prefixes"* ]]
+  [[ $output == *"environment SECLI_ALLOWED_PREFIXES"* ]]
+}
+
+@test "configuration file image is passed to podman" {
+  project="$BATS_TEST_TMPDIR/allowed/project"
+  mkdir -p "$project" "$DEPLOY/config"
+  printf 'SECLI_IMAGE=localhost/secli:configured\n' >"$DEPLOY/config/secli.conf"
+
+  run env \
+    SECLI_ALLOWED_PREFIXES="$BATS_TEST_TMPDIR/allowed" \
+    bash -c 'cd "$1" && exec bash "$2" opencode' _ "$project" "$DEPLOY/secli.sh"
+
+  [ "$status" -eq 0 ]
+  [[ $output == *"<localhost/secli:configured>"* ]]
+}
+
+@test "configuration file state directory is used by init" {
+  mkdir -p "$DEPLOY/config"
+  printf 'SECLI_STATE_DIR=%s/config-state\n' "$BATS_TEST_TMPDIR" \
+    >"$DEPLOY/config/secli.conf"
+
+  run bash "$DEPLOY/secli.sh" init opencode
+
+  [ "$status" -eq 0 ]
+  [ -f "$BATS_TEST_TMPDIR/config-state/opencode/home/.config/opencode/opencode.jsonc" ]
+}
+
+@test "unknown configuration keys are rejected with file and line" {
+  mkdir -p "$DEPLOY/config"
+  printf '# comment\nSECLI_BOGUS=1\n' >"$DEPLOY/config/secli.conf"
+
+  run bash "$DEPLOY/secli.sh" list
+
+  [ "$status" -eq 1 ]
+  [[ $output == *"line 2"* ]]
+  [[ $output == *"unknown configuration key 'SECLI_BOGUS'"* ]]
+  [[ $output == *"SECLI_ALLOWED_PREFIXES SECLI_IMAGE SECLI_STATE_DIR"* ]]
+}
+
+@test "malformed configuration lines are rejected" {
+  mkdir -p "$DEPLOY/config"
+  printf 'not-an-assignment\n' >"$DEPLOY/config/secli.conf"
+
+  run bash "$DEPLOY/secli.sh" list
+  [ "$status" -eq 1 ]
+  [[ $output == *"expected SECLI_KEY=value"* ]]
+
+  printf 'SECLI_IMAGE=\n' >"$DEPLOY/config/secli.conf"
+  run bash "$DEPLOY/secli.sh" list
+  [ "$status" -eq 1 ]
+  [[ $output == *"must not be empty"* ]]
+}
+
+@test "explicit SECLI_CONFIG must exist" {
+  run env SECLI_CONFIG="$BATS_TEST_TMPDIR/missing.conf" bash "$DEPLOY/secli.sh" list
+
+  [ "$status" -eq 1 ]
+  [[ $output == *"SECLI_CONFIG points to a missing file"* ]]
 }

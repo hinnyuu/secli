@@ -3,7 +3,7 @@
 Secure Enhanced CLI：使用 Fedora 宿主机上的 rootless Podman 与容器内 Nix，为多个
 AI coding CLI 提供统一、隔离、可重建的运行环境。
 
-> **项目状态：v0.1.0 已正式发布。**
+> **项目状态：v0.1.0 已正式发布；`VERSION=v0.2.0-dev` 正在开发下一版本。**
 >
 > 发布前请先确认 GitHub Actions 和 GHCR 镜像 workflow 成功；开发测试可通过 `SECLI_IMAGE`
 > 指向本地镜像。
@@ -209,11 +209,38 @@ v1 不支持端口范围、省略字段或 IPv6。
 SECLI_ALLOWED_PREFIXES=/work/projects:/srv/code ./secli.sh opencode
 ```
 
+也可以写入配置文件 `config/secli.conf` 持久生效（环境变量优先），见下文
+[配置文件](#配置文件)。
+
 匹配尊重路径边界；例如 `/data/projects-evil` 不属于 `/data/projects`。
 
 项目以相同绝对路径挂入容器，并成为容器工作目录。路径校验失败时立即拒绝启动，不自动
 扩大白名单。`init`、`list` 和 secli 包装器帮助不启动容器，因此可在白名单外运行；
 `./secli.sh opencode -- --help` 会实际启动 CLI，仍需要合法项目目录。
+
+## 配置文件
+
+宿主机启动器支持可选的持久配置文件，免去每次 export 环境变量：
+
+```bash
+cp config/secli.conf.example config/secli.conf
+```
+
+```text
+# config/secli.conf
+SECLI_ALLOWED_PREFIXES=/data/projects:/data/test
+SECLI_IMAGE=localhost/secli:dev
+SECLI_STATE_DIR=/secure/path/secli-state
+```
+
+格式为严格 `SECLI_KEY=value` 行格式：`#` 注释与空行忽略，未知键、畸形行和空值
+立即报错（含文件路径与行号）。优先级固定为：**环境变量 > 配置文件 > 内置默认**。
+
+当前支持三个键：`SECLI_ALLOWED_PREFIXES`（项目白名单）、`SECLI_IMAGE`（镜像引用）、
+`SECLI_STATE_DIR`（状态根）。容器名与 Nix 卷 epoch 是架构常量，不开放配置。
+
+配置文件适用于 git clone 部署；`nix build` 产物的 `BASE_DIR` 是只读 Nix store 路径，
+该场景继续用环境变量配置。完整参考见 [`docs/config.md`](docs/config.md)。
 
 ## 状态与备份
 
@@ -231,9 +258,11 @@ state/
 SECLI_STATE_DIR=/secure/path/secli-state ./secli.sh opencode
 ```
 
-从 Git clone 直接运行时，默认状态目录是仓库内的 `state/`。通过 `nix build` 或 Nix profile
-安装的 `secli` wrapper 默认使用 `$XDG_STATE_HOME/secli`，未设置 XDG 时回退到
-`$HOME/.local/state/secli`；两种部署方式都可以用 `SECLI_STATE_DIR` 显式覆盖。
+或写入 `config/secli.conf` 持久生效（见[配置文件](#配置文件)）。
+
+从 Git clone 直接运行时，默认状态目录是仓库内的 `state/`。Flake 宿主机包仅用于开发
+验证，其 wrapper 默认使用 `$XDG_STATE_HOME/secli`，未设置 XDG 时回退到
+`$HOME/.local/state/secli`；两种场景都可以用 `SECLI_STATE_DIR` 显式覆盖。
 
 状态目录权限至少为 `0700`。备份某个 CLI 时，停止 secli 后复制对应的
 `state/<cli>/home/` 即可。
@@ -319,7 +348,7 @@ nix build
 ```
 
 检查包括 ShellCheck、shfmt、actionlint、Bats、文档一致性、manifest 契约和模板布局。
-当前 Bats 覆盖宿主机启动器和 entrypoint 的 22 个场景；Podman 参数测试使用 mock，不依赖
+当前 Bats 覆盖宿主机启动器和 entrypoint 的 29 个场景；Podman 参数测试使用 mock，不依赖
 当前开发容器内的嵌套 daemon。每次提交前检查 `AGENTS.md`、README、相关文档、`.gitignore`、
 `VERSION` 和 `flake.lock`；事实变化必须与实现放在同一提交，无关提交不制造文档噪声。
 
@@ -360,6 +389,7 @@ NVIDIA CDI、项目/数据集读写边界、两个 CLI 的认证持久化以及 
 - [x] 自动测试与 Fedora 宿主机测试手册；基础 NVIDIA、认证、挂载/端口矩阵和正常启动下
   的 updater/shim 行为已验证
 - [x] 首个版本化发布 `v0.1.0`
+- [x] 集中宿主机配置文件 `config/secli.conf`（v0.2.0-dev）
 
 实现按上述顺序拆成可独立验证的阶段；除非明确要求完整 v1，否则不把所有阶段合并成
 一次巨大变更。build 阶段允许初始化本地 Git 仓库，并按 Conventional Commits 创建本地
