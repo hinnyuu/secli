@@ -1,28 +1,26 @@
-# secli host launcher configuration example.
+# secli 宿主机启动器配置示例。
 #
-# Copy this file to config/secli.conf and uncomment the keys you want to
-# change. The configuration file applies to the git clone deployment; the
-# Nix package deployment is configured through environment variables.
-# See docs/config.md for the full reference.
+# 将本文件复制为 config/secli.conf 并取消注释需要修改的键。配置文件适用于
+# git clone 部署；Nix 包部署通过环境变量配置。完整参考见 docs/config.md。
 #
-# Format rules:
-#   - one SECLI_KEY=value assignment per line
-#   - empty lines and lines starting with '#' are ignored
-#   - unknown keys are rejected
-#   - later assignments override earlier ones
+# 格式规则：
+#   - 每行一条 SECLI_KEY=value 赋值
+#   - 空行与以 '#' 开头的行忽略
+#   - 未知键会被拒绝
+#   - 同键后定义覆盖先定义
 #
-# Precedence: environment variable > configuration file > built-in default.
+# 优先级：环境变量 > 配置文件 > 内置默认。
 
-# Project directory whitelist, colon-separated absolute paths.
-# Default: /data/projects
-# Example adding a scratch directory:
+# 项目目录白名单，冒号分隔的绝对路径。
+# 默认：/data/projects
+# 添加暂存目录的示例：
 #SECLI_ALLOWED_PROJECT_PREFIXES=/data/projects:/tmp
 
-# Full image reference used by the host launcher.
-# Default: ghcr.io/hinnyuu/secli:<VERSION>, where <VERSION> is read from
-# the VERSION file in the deployment root.
+# 宿主机启动器使用的完整镜像引用。
+# 默认：ghcr.io/hinnyuu/secli:<VERSION>，其中 <VERSION> 读取自部署根的
+# VERSION 文件。
 #SECLI_IMAGE=localhost/secli:dev
 
-# State root holding the per-CLI Homes.
-# Default: <deployment root>/state
+# 存放各 CLI Home 的状态根。
+# 默认：<部署根>/state
 #SECLI_STATE_DIR=/secure/path/secli-state
