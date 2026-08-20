@@ -1,59 +1,48 @@
-# Host configuration
+# 宿主机配置
 
-The host launcher reads an optional configuration file that persists user
-settings across shell sessions. The configuration file applies to the git
-clone deployment. The Nix package produced by the Flake is a development
-verification artifact whose `BASE_DIR` is a read-only Nix store path, so
-that scenario is configured through environment variables instead.
+宿主机启动器读取可选的配置文件，将用户设置跨 shell 会话持久化。配置文件适用于
+git clone 部署。Flake 产出的宿主机包仅用于开发验证，其 `BASE_DIR` 是只读的 Nix store
+路径，该场景继续使用环境变量配置。
 
-## Location and lookup
+## 位置与查找
 
-The launcher reads the first applicable path in this order:
+启动器按以下顺序读取第一个适用的路径：
 
-1. The path in the `SECLI_CONFIG` environment variable, when set. A
-   missing file here is an error, because the path was requested
-   explicitly.
-2. `config/secli.conf` in the deployment root. A missing file simply
-   keeps the built-in defaults.
+1. `SECLI_CONFIG` 环境变量指向的路径（若已设置）。此处文件缺失属于错误，因为该
+   路径是显式指定的。
+2. 部署根下的 `config/secli.conf`。文件缺失时保持内置默认值。
 
-Copy `config/secli.conf.example` to `config/secli.conf` and uncomment the
-keys you want to change. Recommended file permission is `0600`: values are
-paths and image references rather than credentials, but the file is
-personal configuration.
+将 `config/secli.conf.example` 复制为 `config/secli.conf`，并取消注释需要修改的键。
+建议文件权限为 `0600`：值是路径和镜像引用而非凭据，但配置文件属于个人配置。
 
-## Format
+## 格式
 
-- One `SECLI_KEY=value` assignment per line.
-- Empty lines and lines starting with `#` are ignored.
-- Leading and trailing whitespace around keys and values is trimmed.
-- Unknown keys, malformed lines and empty values are rejected with the
-  file path and line number.
-- Later assignments to the same key override earlier ones.
-- No multi-line values and no append (`+=`) syntax. This keeps the format
-  compatible with a future drop-in directory in which later files override
-  earlier ones.
+- 每行一条 `SECLI_KEY=value` 赋值。
+- 空行与以 `#` 开头的行忽略。
+- 键与值两侧的前后空白会被去除。
+- 未知键、畸形行与空值会被拒绝，错误信息包含文件路径与行号。
+- 同一键的后定义覆盖先定义。
+- 不允许多行值与 `+=` 追加语法。这保证格式未来可平滑过渡到 drop-in 目录
+  （按文件名排序应用、后文件覆盖前文件）。
 
-The file is parsed as validated data. Unlike manifests, it is never
-sourced or executed.
+文件按受校验数据解析。与 manifest 不同，绝不 source 或执行。
 
-## Precedence
+## 优先级
 
-Environment variable > configuration file > built-in default.
+环境变量 > 配置文件 > 内置默认。
 
-## Supported keys
+## 支持的键
 
-| Key | Meaning | Built-in default |
+| 键 | 含义 | 内置默认 |
 | --- | --- | --- |
-| `SECLI_ALLOWED_PROJECT_PREFIXES` | Colon-separated absolute path prefixes for the project directory | `/data/projects` |
-| `SECLI_IMAGE` | Full image reference used by the host launcher | `ghcr.io/hinnyuu/secli:<VERSION>` |
-| `SECLI_STATE_DIR` | State root holding the per-CLI Homes | `<deployment root>/state` |
+| `SECLI_ALLOWED_PROJECT_PREFIXES` | 项目目录白名单，冒号分隔的绝对路径前缀 | `/data/projects` |
+| `SECLI_IMAGE` | 宿主机启动器使用的完整镜像引用 | `ghcr.io/hinnyuu/secli:<VERSION>` |
+| `SECLI_STATE_DIR` | 存放各 CLI Home 的状态根 | `<部署根>/state` |
 
-Validation matches the environment-variable behavior: prefixes must be
-absolute paths, the image reference must not contain whitespace, and the
-state directory must be a non-empty path. The container name and the Nix
-volume epoch are architectural constants and are not configurable.
+校验规则与环境变量行为一致：前缀必须是绝对路径，镜像引用不得包含空白，状态目录
+必须是非空路径。容器名与 Nix 卷 epoch 是架构常量，不开放配置。
 
-## Example
+## 示例
 
 ```text
 SECLI_ALLOWED_PROJECT_PREFIXES=/data/projects:/tmp

@@ -1,15 +1,15 @@
-# secli OpenCode defaults
+# secli OpenCode 默认规则
 
-This file is a recommended starting point for OpenCode sessions launched by secli.
+本文件是 secli 启动的 OpenCode 会话的推荐起点。
 
-- The current project is writable and is the only project directory mounted by secli.
-- Explicit datasets are read-only inputs. Do not attempt to modify them.
-- Do not treat files outside the current project and explicit datasets as available context.
-- Keep approval prompts enabled for edits, shell commands, and other side effects.
-- Use the project's `flake.nix` and `nix develop` for project tools and dependencies.
-- Do not use system package managers, installer scripts, `curl | bash`, or CLI self-updaters.
-- Do not store credentials in the shared `/nix` tree.
-- Verify generated changes and run the project's own tests before reporting completion.
+- 当前项目可写，且是 secli 挂载的唯一项目目录。
+- 显式数据集是只读输入。不要尝试修改它们。
+- 不要把当前项目和显式数据集之外的文件当作可用上下文。
+- 对编辑、shell 命令和其他副作用保持审批提示开启。
+- 项目工具和依赖使用项目的 `flake.nix` 和 `nix develop`。
+- 不使用系统包管理器、安装脚本、`curl | bash` 或 CLI 自更新器。
+- 不在共享 `/nix` 树中存放凭据。
+- 报告完成前验证生成的变更并运行项目自己的测试。
 
-These are user-editable recommendations, not an enforced policy. The project-level `AGENTS.md`
-inside a mounted project remains part of the project's own instructions.
+这些是用户可编辑的推荐设置，不是强制策略。挂载项目内的项目级 `AGENTS.md` 仍属于
+项目自己的指令。

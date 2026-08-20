@@ -1,77 +1,71 @@
-# Security Model
+# 安全模型
 
-secli reduces the host-side impact of an AI coding CLI by making the container boundary and every
-host mount explicit. It is not a perfect sandbox and must not be described as one.
+secli 通过显式化容器边界和每一个宿主机挂载，缩小宿主机侧的影响范围。它不是完美
+沙箱，也不得被描述为完美沙箱。
 
-## Trust assumptions
+## 信任假设
 
-- The host user trusts the secli repository, its manifests and the selected image.
-- Repository and local manifests are trusted Bash source files. Loading a manifest is equivalent
-  to executing its contents.
-- The host configuration file `config/secli.conf` is parsed as validated data, never sourced or
-  executed. It only influences the host launcher and is not mounted into the container.
-- Rootless Podman, the host kernel and SELinux provide the container boundary.
-- The user reviews CLI approvals, project changes and credentials using the CLI's native controls.
+- 宿主机用户信任 secli 仓库、其 manifest 与所选镜像。
+- 仓库 manifest 与本地 manifest 都是受信任的 Bash 源文件。加载 manifest 等价于执行
+  其内容。
+- 宿主机配置文件 `config/secli.conf` 按受校验数据解析，绝不 source 或执行。它只影响
+  宿主机启动器，不挂入容器。
+- rootless Podman、宿主机内核与 SELinux 提供容器边界。
+- 用户通过各 CLI 的原生控制审查 CLI 审批、项目变更和凭据。
 
-## What the container can access
+## 容器可以访问什么
 
-- The current project, mounted read-write at its physical absolute path.
-- Datasets explicitly supplied with `--dataset`, mounted read-only at their absolute paths.
-- The selected CLI's complete Home at `/root`, including credentials, sessions and caches.
-- The shared `/nix` volume, including profiles, stores and build caches.
-- The network, which is required for provider access, Nix installation and project workflows.
+- 当前项目，以其物理绝对路径读写挂载。
+- 通过 `--dataset` 显式提供的数据集，以其绝对路径只读挂载。
+- 所选 CLI 的完整 Home（`/root`），包括凭据、会话和缓存。
+- 共享 `/nix` 卷，包括 profiles、store 和构建缓存。
+- 网络，用于访问服务提供商、Nix 安装和项目工作流。
 
-## What the container normally cannot access
+## 容器通常不能访问什么
 
-- Other host projects and datasets that were not explicitly mounted.
-- Other CLI Homes and their authentication state.
-- The host user's ordinary Home directory.
-- The host launcher configuration file, which is never mounted into the container.
-- Host paths outside the explicit mount set.
+- 未显式挂载的其他宿主机项目和数据集。
+- 其他 CLI 的 Home 及其认证状态。
+- 宿主机用户的普通 Home 目录。
+- 宿主机启动器配置文件，它从不挂入容器。
+- 显式挂载集之外的宿主机路径。
 
-The container process runs as root inside the container. Rootless Podman maps that root to the host
-user's rootless namespace; this limits host privilege but does not make a compromised process
-harmless to mounted project data.
+容器内进程以 root 运行。rootless Podman 将该 root 映射到宿主机用户的 rootless
+命名空间；这限制了宿主机权限，但被攻陷的进程对已挂载项目数据并非无害。
 
-## Important limitations
+## 重要限制
 
-- The current project is writable. A bad or malicious instruction can delete, modify or exfiltrate
-  project content.
-- `/nix` is writable by design. CLI subprocesses need it for `nix develop`, builds and Nix-managed
-  software. Do not put credentials in `/nix`.
-- Network access is enabled. Provider requests, web tools and arbitrary CLI network behavior remain
-  possible.
-- Native CLI permission settings are recommendations from templates. Users can edit them, and
-  secli does not translate one CLI's permission model into another's.
-- The CLI may still download files into its Home. secli starts the profile's absolute binary, but
-  root inside the container means file permissions are not a complete update defense.
-- A malicious project can contain prompt injection instructions. secli does not defend against the
-  CLI reading the project it was explicitly asked to work on.
+- 当前项目可写。恶意指令或错误操作能够删除、修改或外泄项目内容。
+- `/nix` 按设计可写。CLI 子进程需要它运行 `nix develop`、构建和安装 Nix 管理的
+  软件。不要在 `/nix` 中存放凭据。
+- 网络访问已启用。提供商请求、web 工具和 CLI 的任意网络行为仍然可能。
+- 原生 CLI 权限设置是模板给出的建议。用户可以修改，secli 不在不同 CLI 的权限模型
+  之间做转换。
+- CLI 仍可能向其 Home 下载文件。secli 启动 profile 中的绝对路径二进制，但容器内
+  root 意味着文件权限不构成完整的更新防线。
+- 恶意项目可能包含提示注入指令。secli 不防御 CLI 读取用户显式要求处理的项目。
 
-## Mount label policy
+## 挂载标签策略
 
-- Shared deployment trees use `:z`: `manifest/`, `manifest.local/`, `templates/`, project and
-  datasets.
-- The selected CLI Home uses `:Z` because it is private to the current container.
-- `/root` is a normal bind mount, not an overlay mount.
-- `--nvidia` adds `--security-opt=label=disable`, which weakens SELinux label isolation for that
-  container and should only be used when GPU access is required.
+- 共享部署树使用 `:z`：`manifest/`、`manifest.local/`、`templates/`、项目和数据集。
+- 所选 CLI Home 使用 `:Z`，因为它是当前容器私有。
+- `/root` 是普通 bind mount，不是 overlay 挂载。
+- `--nvidia` 追加 `--security-opt=label=disable`，这会削弱该容器的 SELinux 标签隔离，
+  仅在需要 GPU 访问时使用。
 
-## Recovery and data handling
+## 恢复与数据处理
 
-- Deleting the `secli-nix-v1` volume removes software profiles, stamps and caches, but not project
-  data or CLI Homes.
-- Removing a CLI Home removes its credentials and sessions. Back it up before cleanup.
-- The container itself uses `--rm` and is not a state store.
-- Logs go to stdout/stderr. secli does not write credentials or application logs into the repository
-  or image.
+- 删除 `secli-nix-v1` 卷会移除软件 profiles、stamps 和缓存，但不移除项目数据或
+  CLI Home。
+- 删除某个 CLI Home 会移除其凭据和会话。清理前先备份。
+- 容器本身使用 `--rm`，不作为状态存储。
+- 日志走 stdout/stderr。secli 不向仓库或镜像写入凭据和应用日志。
 
-## User hardening checklist
+## 用户加固清单
 
-1. Keep project data under the configured allowed prefixes.
-2. Mount datasets explicitly and use the read-only flag for inputs.
-3. Keep Git backups before granting an agent write access.
-4. Review and customize each CLI's native permissions after `init`.
-5. Keep credentials in the CLI Home only; never add them to manifests, templates or `/nix`.
-6. Use `--nvidia` only when needed and understand the SELinux tradeoff.
-7. Pin deployments to immutable image tags and review repository changes before updating.
+1. 项目数据保持在配置的允许前缀之下。
+2. 显式挂载数据集，并为输入使用只读标志。
+3. 在授予 agent 写权限前做好 Git 备份。
+4. `init` 后审查并定制各 CLI 的原生权限。
+5. 凭据只保存在 CLI Home 中；绝不写入 manifest、模板或 `/nix`。
+6. 仅在需要时使用 `--nvidia`，并理解 SELinux 让步。
+7. 部署钉住不可变镜像标签，更新前审查仓库变更。
