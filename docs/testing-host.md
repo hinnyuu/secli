@@ -74,7 +74,7 @@ podman run --rm --entrypoint /nix/var/nix/profiles/secli-base/bin/rg \
 预期：
 
 - entrypoint 为 `["/entrypoint.sh"]`；
-- 已发布镜像的版本为 `v0.1.0`；
+- 已发布镜像的版本为 `v0.2.0`；
 - git 和 ripgrep 正常输出版本。
 
 ### 空卷与真实 CLI profile
@@ -333,7 +333,7 @@ rm -rf /tmp/secli-auth-state
 
 状态：白名单覆盖、环境变量优先级、状态根重定向和非法键拒绝已验证。
 
-这些步骤验证 `v0.2.0-dev` 新增的 `config/secli.conf` 宿主机配置文件：查找、对内置
+这些步骤验证 `v0.2.0` 新增的 `config/secli.conf` 宿主机配置文件：查找、对内置
 默认值的优先级、环境变量覆盖和非法内容拒绝。使用固定开发镜像和临时状态根，不需要
 凭据。
 
@@ -412,11 +412,11 @@ Podman 版本：已验证 >= 5.8.4
 环境变量优先于配置：通过
 配置状态根重定向：通过
 非法键拒绝：通过
-备注：宿主机清理完成。测试时键名仍为 SECLI_ALLOWED_PREFIXES；它在同一未发布的
-v0.2.0 周期内更名为 SECLI_ALLOWED_PROJECT_PREFIXES。
+备注：宿主机清理完成。测试时键名仍为 SECLI_ALLOWED_PREFIXES；它在同一 v0.2.0
+发布周期内更名为 SECLI_ALLOWED_PROJECT_PREFIXES。
 ```
 
-## v0.2.0-dev 启动器从零验证
+## v0.2.0 启动器从零验证
 
 状态：完全清理、镜像重建和空卷重启后在 Fedora amd64 通过。
 
