@@ -206,7 +206,7 @@ v1 不支持端口范围、省略字段或 IPv6。
 可用冒号分隔的环境变量整体覆盖：
 
 ```bash
-SECLI_ALLOWED_PREFIXES=/work/projects:/srv/code ./secli.sh opencode
+SECLI_ALLOWED_PROJECT_PREFIXES=/work/projects:/srv/code ./secli.sh opencode
 ```
 
 也可以写入配置文件 `config/secli.conf` 持久生效（环境变量优先），见下文
@@ -228,7 +228,7 @@ cp config/secli.conf.example config/secli.conf
 
 ```text
 # config/secli.conf
-SECLI_ALLOWED_PREFIXES=/data/projects:/data/test
+SECLI_ALLOWED_PROJECT_PREFIXES=/data/projects:/data/test
 SECLI_IMAGE=localhost/secli:dev
 SECLI_STATE_DIR=/secure/path/secli-state
 ```
@@ -236,7 +236,7 @@ SECLI_STATE_DIR=/secure/path/secli-state
 格式为严格 `SECLI_KEY=value` 行格式：`#` 注释与空行忽略，未知键、畸形行和空值
 立即报错（含文件路径与行号）。优先级固定为：**环境变量 > 配置文件 > 内置默认**。
 
-当前支持三个键：`SECLI_ALLOWED_PREFIXES`（项目白名单）、`SECLI_IMAGE`（镜像引用）、
+当前支持三个键：`SECLI_ALLOWED_PROJECT_PREFIXES`（项目白名单）、`SECLI_IMAGE`（镜像引用）、
 `SECLI_STATE_DIR`（状态根）。容器名与 Nix 卷 epoch 是架构常量，不开放配置。
 
 配置文件适用于 git clone 部署；`nix build` 产物的 `BASE_DIR` 是只读 Nix store 路径，

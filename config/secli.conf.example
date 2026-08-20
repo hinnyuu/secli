@@ -15,7 +15,7 @@
 
 # Project directory whitelist, colon-separated absolute paths.
 # Default: /data/projects:/data/test:/data/dataset
-#SECLI_ALLOWED_PREFIXES=/data/projects:/data/test:/data/dataset
+#SECLI_ALLOWED_PROJECT_PREFIXES=/data/projects:/data/test:/data/dataset
 
 # Full image reference used by the host launcher.
 # Default: ghcr.io/hinnyuu/secli:<VERSION>, where <VERSION> is read from

@@ -357,7 +357,7 @@ secli 选项：
 - 当前工作目录必须先做物理路径规范化，再执行前缀白名单校验；校验失败立即拒绝启动，
   不猜测替代目录，也不自动扩大白名单。
 - 默认允许 `/data/projects`、`/data/test`、`/data/dataset`。
-- `SECLI_ALLOWED_PREFIXES` 以冒号分隔并整体覆盖默认值；环境变量优先于配置文件
+- `SECLI_ALLOWED_PROJECT_PREFIXES` 以冒号分隔并整体覆盖默认值；环境变量优先于配置文件
   `config/secli.conf` 中的同名键（见 §8.4）。
 - 前缀匹配必须尊重路径边界，`/data/projects-evil` 不属于 `/data/projects`。
 - 当前项目以同一绝对路径 `rw,z` 挂载，并作为容器工作目录。
@@ -390,7 +390,7 @@ drop-in 目录（按文件名排序应用、后文件覆盖前文件）。配置
 
 当前支持的键与内置默认：
 
-- `SECLI_ALLOWED_PREFIXES`：项目路径白名单，默认 `/data/projects:/data/test:/data/dataset`；
+- `SECLI_ALLOWED_PROJECT_PREFIXES`：项目路径白名单，默认 `/data/projects:/data/test:/data/dataset`；
 - `SECLI_IMAGE`：完整镜像引用，默认 `ghcr.io/hinnyuu/secli:<VERSION>`；
 - `SECLI_STATE_DIR`：状态根，默认 `<部署根>/state`。
 

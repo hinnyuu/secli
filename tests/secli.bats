@@ -110,7 +110,7 @@ EOF
   mkdir -p "$project" "$dataset"
 
   run env \
-    SECLI_ALLOWED_PREFIXES="$BATS_TEST_TMPDIR/allowed" \
+    SECLI_ALLOWED_PROJECT_PREFIXES="$BATS_TEST_TMPDIR/allowed" \
     SECLI_STATE_DIR="$BATS_TEST_TMPDIR/state" \
     bash -c 'cd "$1" && exec bash "$2" opencode --dataset "$3" -p 4096 -- -p "native prompt"' \
     _ "$project" "$DEPLOY/secli.sh" "$dataset"
@@ -130,7 +130,7 @@ EOF
   mkdir -p "$project" "$dataset_a" "$dataset_b"
 
   run env \
-    SECLI_ALLOWED_PREFIXES="$BATS_TEST_TMPDIR/allowed" \
+    SECLI_ALLOWED_PROJECT_PREFIXES="$BATS_TEST_TMPDIR/allowed" \
     bash -c 'cd "$1" && exec bash "$2" opencode --dataset "$3" --dataset "$4"' \
     _ "$project" "$DEPLOY/secli.sh" "$dataset_a" "$dataset_b"
 
@@ -144,7 +144,7 @@ EOF
   mkdir -p "$project"
 
   run env \
-    SECLI_ALLOWED_PREFIXES="$BATS_TEST_TMPDIR/allowed" \
+    SECLI_ALLOWED_PROJECT_PREFIXES="$BATS_TEST_TMPDIR/allowed" \
     bash -c 'cd "$1" && exec bash "$2" opencode -p 0.0.0.0:8080:4096' \
     _ "$project" "$DEPLOY/secli.sh"
 
@@ -175,7 +175,7 @@ EOF
   project="$BATS_TEST_TMPDIR/allowed/project"
   mkdir -p "$project"
   run env \
-    SECLI_ALLOWED_PREFIXES="$BATS_TEST_TMPDIR/allowed" \
+    SECLI_ALLOWED_PROJECT_PREFIXES="$BATS_TEST_TMPDIR/allowed" \
     bash -c 'cd "$1" && exec bash "$2" qoder-cli-cn -- -p "native prompt"' \
     _ "$project" "$DEPLOY/secli.sh"
   [ "$status" -eq 0 ]
@@ -188,7 +188,7 @@ EOF
   mkdir -p "$project"
 
   run env \
-    SECLI_ALLOWED_PREFIXES="$BATS_TEST_TMPDIR/allowed" \
+    SECLI_ALLOWED_PROJECT_PREFIXES="$BATS_TEST_TMPDIR/allowed" \
     bash -c 'cd "$1" && exec bash "$2" opencode' _ "$project" "$DEPLOY/secli.sh"
 
   [ "$status" -eq 1 ]
@@ -215,7 +215,7 @@ EOF
 
   run env \
     MOCK_CONTAINER_EXISTS=true \
-    SECLI_ALLOWED_PREFIXES="$BATS_TEST_TMPDIR/allowed" \
+    SECLI_ALLOWED_PROJECT_PREFIXES="$BATS_TEST_TMPDIR/allowed" \
     bash -c 'cd "$1" && exec bash "$2" opencode' _ "$project" "$DEPLOY/secli.sh"
 
   [ "$status" -eq 1 ]
@@ -228,7 +228,7 @@ EOF
 
   run env \
     MOCK_IMAGE_EXISTS=false \
-    SECLI_ALLOWED_PREFIXES="$BATS_TEST_TMPDIR/allowed" \
+    SECLI_ALLOWED_PROJECT_PREFIXES="$BATS_TEST_TMPDIR/allowed" \
     bash -c 'cd "$1" && exec bash "$2" opencode' _ "$project" "$DEPLOY/secli.sh"
 
   [ "$status" -eq 1 ]
@@ -239,7 +239,7 @@ EOF
 @test "config file overrides the default project whitelist" {
   project="$BATS_TEST_TMPDIR/custom-whitelist/project"
   mkdir -p "$project" "$DEPLOY/config"
-  printf 'SECLI_ALLOWED_PREFIXES=%s/custom-whitelist\n' "$BATS_TEST_TMPDIR" \
+  printf 'SECLI_ALLOWED_PROJECT_PREFIXES=%s/custom-whitelist\n' "$BATS_TEST_TMPDIR" \
     >"$DEPLOY/config/secli.conf"
 
   run env \
@@ -254,20 +254,20 @@ EOF
   project="$BATS_TEST_TMPDIR/env-allowed/project"
   config_project="$BATS_TEST_TMPDIR/config-only/project"
   mkdir -p "$project" "$config_project" "$DEPLOY/config"
-  printf 'SECLI_ALLOWED_PREFIXES=%s/config-only\n' "$BATS_TEST_TMPDIR" \
+  printf 'SECLI_ALLOWED_PROJECT_PREFIXES=%s/config-only\n' "$BATS_TEST_TMPDIR" \
     >"$DEPLOY/config/secli.conf"
 
   run env \
-    SECLI_ALLOWED_PREFIXES="$BATS_TEST_TMPDIR/env-allowed" \
+    SECLI_ALLOWED_PROJECT_PREFIXES="$BATS_TEST_TMPDIR/env-allowed" \
     bash -c 'cd "$1" && exec bash "$2" opencode' _ "$project" "$DEPLOY/secli.sh"
   [ "$status" -eq 0 ]
 
   run env \
-    SECLI_ALLOWED_PREFIXES="$BATS_TEST_TMPDIR/env-allowed" \
+    SECLI_ALLOWED_PROJECT_PREFIXES="$BATS_TEST_TMPDIR/env-allowed" \
     bash -c 'cd "$1" && exec bash "$2" opencode' _ "$config_project" "$DEPLOY/secli.sh"
   [ "$status" -eq 1 ]
   [[ $output == *"outside allowed prefixes"* ]]
-  [[ $output == *"environment SECLI_ALLOWED_PREFIXES"* ]]
+  [[ $output == *"environment SECLI_ALLOWED_PROJECT_PREFIXES"* ]]
 }
 
 @test "configuration file image is passed to podman" {
@@ -276,7 +276,7 @@ EOF
   printf 'SECLI_IMAGE=localhost/secli:configured\n' >"$DEPLOY/config/secli.conf"
 
   run env \
-    SECLI_ALLOWED_PREFIXES="$BATS_TEST_TMPDIR/allowed" \
+    SECLI_ALLOWED_PROJECT_PREFIXES="$BATS_TEST_TMPDIR/allowed" \
     bash -c 'cd "$1" && exec bash "$2" opencode' _ "$project" "$DEPLOY/secli.sh"
 
   [ "$status" -eq 0 ]
@@ -303,7 +303,7 @@ EOF
   [ "$status" -eq 1 ]
   [[ $output == *"line 2"* ]]
   [[ $output == *"unknown configuration key 'SECLI_BOGUS'"* ]]
-  [[ $output == *"SECLI_ALLOWED_PREFIXES SECLI_IMAGE SECLI_STATE_DIR"* ]]
+  [[ $output == *"SECLI_ALLOWED_PROJECT_PREFIXES SECLI_IMAGE SECLI_STATE_DIR"* ]]
 }
 
 @test "malformed configuration lines are rejected" {
