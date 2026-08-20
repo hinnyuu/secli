@@ -1,19 +1,18 @@
 # NVIDIA
 
-`secli.sh --nvidia` enables NVIDIA CDI passthrough. It does not install drivers, detect GPUs or
-accept arbitrary device arguments.
+`secli.sh --nvidia` 启用 NVIDIA CDI 透传。它不安装驱动、不探测 GPU、不接受任意设备
+参数。
 
-## Host prerequisites
+## 宿主机前置条件
 
-- Fedora host with a working rootless Podman installation `>= 5.8.4`.
-- A supported NVIDIA driver installed and working on the host.
-- `nvidia-container-toolkit` installed for the host distribution.
-- NVIDIA CDI specification generated with `nvidia-ctk cdi generate`.
-- The generated CDI device is visible to the rootless Podman user.
-- SELinux enabled configuration understood before testing. secli disables the container SELinux
-  label for this mode.
+- Fedora 宿主机，rootless Podman `>= 5.8.4` 正常工作。
+- 已安装受支持的 NVIDIA 驱动且工作正常。
+- 已为该发行版安装 `nvidia-container-toolkit`。
+- 已用 `nvidia-ctk cdi generate` 生成 NVIDIA CDI 规范。
+- 生成的 CDI 设备对 rootless Podman 用户可见。
+- 测试前理解 SELinux 启用配置。secli 在该模式下关闭容器的 SELinux 标签。
 
-Check the host:
+检查宿主机：
 
 ```bash
 podman --version
@@ -23,30 +22,30 @@ nvidia-ctk cdi list
 getenforce
 ```
 
-If CDI is not present, generate it using the host's toolkit installation:
+若 CDI 不存在，按宿主机 toolkit 安装方式生成：
 
 ```bash
 sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
 nvidia-ctk cdi list
 ```
 
-The `sudo` above is a Fedora host command for the human administrator. It is not run by secli and
-is not applicable inside the development container.
+上面的 `sudo` 是 Fedora 宿主机上由人类管理员执行的命令。它不由 secli 运行，也不
+适用于开发容器内。
 
-## Expected Podman arguments
+## 预期 Podman 参数
 
-With `--nvidia`, the launcher adds exactly:
+使用 `--nvidia` 时，启动器仅追加：
 
 ```text
 --security-opt=label=disable
 --device=nvidia.com/gpu=all
 ```
 
-No driver installation or host probing is performed by the launcher.
+启动器不做任何驱动安装或宿主机探测。
 
-## Test procedure
+## 测试流程
 
-Run from a valid project directory with a local image already built:
+在合法项目目录中、本地镜像已构建的前提下运行：
 
 ```bash
 export SECLI_IMAGE=localhost/secli:dev
@@ -55,14 +54,14 @@ export SECLI_STATE_DIR=/tmp/secli-nvidia-test-state
 ./secli.sh opencode --nvidia -- --help
 ```
 
-Expected:
+预期：
 
-- Podman accepts the CDI device.
-- The CLI starts and prints its native help.
-- `podman inspect` shows the container was created with `label=disable` and the NVIDIA CDI device.
-- The container is removed after exit.
+- Podman 接受 CDI 设备。
+- CLI 启动并输出其原生帮助。
+- `podman inspect` 显示容器以 `label=disable` 和 NVIDIA CDI 设备创建。
+- 容器在退出后被移除。
 
-For a direct device smoke test independent of secli:
+独立于 secli 的直接设备冒烟测试：
 
 ```bash
 podman run --rm \
@@ -72,32 +71,30 @@ podman run --rm \
   --help
 ```
 
-## Security tradeoff
+## 安全让步
 
-Disabling SELinux labeling is an intentional security reduction required by the selected CDI path
-on the target setup. Do not treat GPU-enabled containers as equivalent to the default SELinux
-confined mode. Record the Fedora, driver, toolkit, CDI and Podman versions with every validation.
+关闭 SELinux 标签是所选 CDI 路径在目标环境下的有意安全让步。不要把启用 GPU 的容器
+等同于默认 SELinux 限制模式。每次验证都记录 Fedora、驱动、toolkit、CDI 和 Podman
+版本。
 
-## Implementation note
+## 实现说明
 
-The Nix base image is intentionally minimal and its `/usr/share` entry may be a store-backed
-symlink. The Containerfile removes that image-local symlink, creates the FHS NVIDIA mount-point
-directories including `/usr/share/nvidia`, and leaves driver files to CDI. It does not copy or
-install driver files; CDI still supplies them from the Fedora host.
+Nix 基础镜像刻意最小化，其 `/usr/share` 可能是 store 后端的符号链接。Containerfile
+移除该镜像内符号链接，创建 FHS NVIDIA 挂载点目录（包括 `/usr/share/nvidia`），驱动
+文件交给 CDI。它不复制或安装驱动文件；CDI 仍从 Fedora 宿主机提供驱动。
 
-## Result
+## 结果
 
 ```text
-Date: 2026-08-19
-Host: Fedora, amd64, SELinux Enforcing
-GPU: NVIDIA GeForce RTX 4060 Laptop GPU
-Driver: 610.57.04, CUDA UMD 13.3
-Toolkit: NVIDIA Container Toolkit CLI 1.19.1
-CDI: passed; GPU index, UUID and `nvidia.com/gpu=all` devices found
-Podman: 5.8.4 rootless
-secli --nvidia: passed; OpenCode printed complete native help and exited normally
-Notes: The first attempt failed because the minimal Nix image used a store-backed `/usr/share`
-symlink and CDI could not create `/usr/share/nvidia/nvoptix.bin`. Commit `e61a215` replaces that
-image-local symlink with writable FHS mount-point directories. The rebuilt image passed without
-errors; no host driver or CDI changes were required.
+日期：2026-08-19
+宿主机：Fedora，amd64，SELinux Enforcing
+GPU：NVIDIA GeForce RTX 4060 Laptop GPU
+驱动：610.57.04，CUDA UMD 13.3
+Toolkit：NVIDIA Container Toolkit CLI 1.19.1
+CDI：通过；找到 GPU 索引、UUID 和 `nvidia.com/gpu=all` 设备
+Podman：5.8.4 rootless
+secli --nvidia：通过；OpenCode 输出完整原生帮助并正常退出
+备注：首次尝试失败，因为最小化 Nix 镜像使用 store 后端的 `/usr/share` 符号链接，
+CDI 无法创建 `/usr/share/nvidia/nvoptix.bin`。提交 `e61a215` 将该镜像内符号链接替换
+为可写 FHS 挂载点目录。重建后的镜像无错误通过；宿主机驱动和 CDI 无需任何变更。
 ```
