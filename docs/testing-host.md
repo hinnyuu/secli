@@ -1,21 +1,20 @@
-# Fedora host integration testing
+# Fedora 宿主机集成测试
 
-This document records tests that cannot run in the nested development container. Run them on the
-target Fedora host with rootless Podman. Record the date, Podman version, architecture and result
-under the relevant section after testing.
+本文档记录无法在嵌套开发容器内运行的测试。在目标 Fedora 宿主机上以 rootless Podman
+执行。测试后在相关小节记录日期、Podman 版本、架构和结果。
 
-## Development image and initial Nix volume
+## 开发镜像与初始 Nix 卷
 
-Status: verified for image build, empty volume initialization, profile installation, repeat
-startup, authentication, mount behavior and normal-start updater stability.
+状态：镜像构建、空卷初始化、profile 安装、重复启动、认证、挂载行为和正常启动下的
+更新器稳定性已验证。
 
-These steps validate the initial `Containerfile`, immutable base-image pin, `/nix` named-volume
-copy behavior and real installation of both CLI profiles. They use a temporary Home state root but
-the fixed development volume `secli-nix-v1`.
+这些步骤验证初始 `Containerfile`、digest 钉死的基础镜像、`/nix` named volume 复制行为
+和两个 CLI profile 的真实安装。它们使用临时 Home 状态根，但使用固定的开发卷
+`secli-nix-v1`。
 
-### Preconditions
+### 前置条件
 
-Run from the secli repository on the Fedora host:
+在 Fedora 宿主机的 secli 仓库中运行：
 
 ```bash
 cd /data/projects/hinnyuu/secli
@@ -25,29 +24,29 @@ getenforce
 git status --short --branch
 ```
 
-Expected:
+预期：
 
-- Podman is at least `5.8.4`.
-- The rootless value is `true`.
-- SELinux is preferably `Enforcing`.
-- The worktree contains only the expected uncommitted Containerfile-stage changes.
+- Podman 至少 `5.8.4`。
+- rootless 值为 `true`。
+- SELinux 最好为 `Enforcing`。
+- 工作区只包含预期的未提交 Containerfile 阶段变更。
 
-Check whether the fixed test volume already exists:
+检查固定测试卷是否已存在：
 
 ```bash
 podman volume exists secli-nix-v1; printf 'volume-exists=%s\n' "$?"
 ```
 
-Exit status `0` means it exists. Do not remove it if another secli deployment is using it. For this
-initial test, remove it only after confirming it contains no needed cache or profiles:
+退出码 `0` 表示已存在。若其他 secli 部署正在使用该卷，不要删除。仅在本次初始测试中、
+确认其中没有需要的缓存或 profile 后才删除：
 
 ```bash
 podman volume rm secli-nix-v1
 ```
 
-If the volume does not exist, Podman reports that it was not found; continue.
+若卷不存在，Podman 报告未找到；继续。
 
-### Build
+### 构建
 
 ```bash
 podman build \
@@ -58,10 +57,10 @@ podman build \
   .
 ```
 
-Expected: the digest-pinned `nixos/nix:2.35.1` base is used, git and ripgrep are installed through
-the pinned nixpkgs commit, and the build completes without a system package manager.
+预期：使用 digest 钉死的 `nixos/nix:2.35.1` 基底，git 和 ripgrep 经钉死的 nixpkgs
+commit 安装，构建全程不使用系统包管理器。
 
-Inspect the image:
+检查镜像：
 
 ```bash
 podman image inspect localhost/secli:dev \
@@ -72,13 +71,13 @@ podman run --rm --entrypoint /nix/var/nix/profiles/secli-base/bin/rg \
   localhost/secli:dev --version
 ```
 
-Expected:
+预期：
 
-- entrypoint is `["/entrypoint.sh"]`;
-- image version is `v0.1.0` for the released image;
-- git and ripgrep print versions successfully.
+- entrypoint 为 `["/entrypoint.sh"]`；
+- 已发布镜像的版本为 `v0.1.0`；
+- git 和 ripgrep 正常输出版本。
 
-### Empty volume and real CLI profiles
+### 空卷与真实 CLI profile
 
 ```bash
 export SECLI_IMAGE=localhost/secli:dev
@@ -88,14 +87,14 @@ export SECLI_STATE_DIR=/tmp/secli-host-test-state
 ./secli.sh qoder-cli-cn -- --version
 ```
 
-Expected on first use:
+首次使用的预期：
 
-- Podman creates and initializes `secli-nix-v1` from the image's `/nix` tree.
-- OpenCode is installed into the `secli-opencode` profile and reports `1.18.18`.
-- Qoder CN is installed into the `secli-qoder-cli-cn` profile and reports `1.1.25`.
-- Both commands exit successfully and the fixed container is removed after each run.
+- Podman 从镜像的 `/nix` 树创建并初始化 `secli-nix-v1`。
+- OpenCode 安装进 `secli-opencode` profile，报告 `1.18.18`。
+- Qoder CN 安装进 `secli-qoder-cli-cn` profile，报告 `1.1.25`。
+- 两条命令成功退出，固定容器在每次运行后被移除。
 
-Inspect the resulting profiles and stamps without starting a CLI:
+不启动 CLI 检查产出的 profile 和 stamp：
 
 ```bash
 podman run --rm \
@@ -105,21 +104,21 @@ podman run --rm \
   -c 'set -eu; ls -l /nix/var/nix/profiles/per-user/root/secli-*; cat /nix/var/lib/secli/opencode.stamp; cat /nix/var/lib/secli/qoder-cli-cn.stamp'
 ```
 
-Expected: both profile links exist and both stamps contain the same fixed llm-agents.nix commit,
-with their respective `#opencode` and `#qoder-cli-cn` outputs.
+预期：两个 profile 链接存在，两个 stamp 包含同一个钉死的 llm-agents.nix commit，
+分别带 `#opencode` 和 `#qoder-cli-cn` 输出。
 
-Run each version command a second time:
+第二次运行各版本命令：
 
 ```bash
 ./secli.sh opencode -- --version
 ./secli.sh qoder-cli-cn -- --version
 ```
 
-Expected: neither run prints a profile reconciliation message; both reuse their installed profile.
+预期：两次运行都不输出 profile 对账信息；都复用已安装的 profile。
 
-### Cleanup
+### 清理
 
-After saving all output needed to diagnose failures:
+保存好诊断失败所需的全部输出后：
 
 ```bash
 unset SECLI_IMAGE SECLI_STATE_DIR
@@ -128,36 +127,35 @@ podman volume rm secli-nix-v1
 podman image rm localhost/secli:dev
 ```
 
-The cleanup removes only test Home data, the rebuildable Nix volume and the local development
-image. Do not remove a volume that another secli deployment uses.
+清理只移除测试 Home 数据、可重建的 Nix 卷和本地开发镜像。不要删除其他 secli 部署
+正在使用的卷。
 
-### Result
+### 结果
 
-Record the result here after host testing:
+宿主机测试后在此记录结果：
 
 ```text
-Date: 2026-08-19
-Host architecture: Fedora host, amd64
-Podman version: verified >= 5.8.4
-SELinux mode: verified expected configuration
-Image build: passed; the follow-up build with `nix profile add` completed without the previous alias warning
-Empty /nix volume initialization: passed
-OpenCode profile/version: passed, `1.18.18`
-Qoder CN profile/version: passed, `1.1.25`
-Second-start noop: passed for both CLIs
-Image entrypoint and labels: passed; image digest `sha256:23c783aa66d3791c70dc976731cb16bb634ffe0488f0112a65b7bb98215748db`
-Base tools: passed; git `2.55.0`, ripgrep `15.2.0`
-Non-interactive first install: passed after commit `8bd588a`; no flake-config trust prompt appeared
-Notes: Host cleanup completed. The expected "There are no packages in the profile" warning is emitted while clearing a fresh profile and is non-fatal.
+日期：2026-08-19
+宿主机架构：Fedora 宿主机，amd64
+Podman 版本：已验证 >= 5.8.4
+SELinux 模式：已验证符合预期配置
+镜像构建：通过；`nix profile add` 的后续构建在无先前 alias 警告的情况下完成
+空 /nix 卷初始化：通过
+OpenCode profile/版本：通过，`1.18.18`
+Qoder CN profile/版本：通过，`1.1.25`
+第二次启动 noop：两个 CLI 均通过
+镜像 entrypoint 和 labels：通过；镜像 digest `sha256:23c783aa66d3791c70dc976731cb16bb634ffe0488f0112a65b7bb98215748db`
+基础工具：通过；git `2.55.0`，ripgrep `15.2.0`
+非交互首次安装：提交 `8bd588a` 之后通过；未出现 flake-config 信任提示
+备注：宿主机清理完成。清空全新 profile 时输出的预期警告 "There are no packages in the profile" 非致命。
 ```
 
-## Mount and port matrix
+## 挂载与端口矩阵
 
-Status: project and dataset access verified; port mapping verified on Fedora; the probe was removed
-after testing.
+状态：项目与数据集访问已验证；端口映射已在 Fedora 验证；探针测试后已移除。
 
-These checks use a temporary trusted local manifest that runs Nix's Bash instead of an AI CLI. It
-does not use credentials. Create the probe resources in the secli deployment:
+这些检查使用一个临时的受信任本地 manifest，运行 Nix 的 Bash 而非 AI CLI。不使用
+凭据。在 secli 部署中创建探针资源：
 
 ```bash
 cd /data/projects/hinnyuu/secli
@@ -193,7 +191,7 @@ EOF
 chmod +x templates/probe/probe.sh
 ```
 
-Prepare separate project and dataset directories:
+准备独立的项目和数据集目录：
 
 ```bash
 mkdir -p /tmp/secli-matrix-project /tmp/secli-matrix-dataset
@@ -204,7 +202,7 @@ export SECLI_STATE_DIR=/tmp/secli-matrix-state
 ./secli.sh init probe
 ```
 
-Verify both mounts are readable and the project is writable:
+验证两个挂载可读且项目可写：
 
 ```bash
 cd /tmp/secli-matrix-project
@@ -219,7 +217,7 @@ SECLI_ALLOWED_PROJECT_PREFIXES=/tmp/secli-matrix-project \
 test "$(<probe-write.txt)" = write-ok
 ```
 
-Verify the dataset write is rejected. This command must exit nonzero and the file must not exist:
+验证数据集写入被拒绝。该命令必须非零退出且文件不得存在：
 
 ```bash
 if SECLI_ALLOWED_PROJECT_PREFIXES=/tmp/secli-matrix-project \
@@ -232,7 +230,7 @@ fi
 test ! -e /tmp/secli-matrix-dataset/probe-write.txt
 ```
 
-Verify the published address while a container is alive. Run this from the same project directory:
+在容器存活期间验证发布的地址。从同一项目目录运行：
 
 ```bash
 SECLI_ALLOWED_PROJECT_PREFIXES=/tmp/secli-matrix-project \
@@ -245,7 +243,7 @@ kill "$secli_pid" 2>/dev/null || true
 wait "$secli_pid" 2>/dev/null || true
 ```
 
-Expected mapping: `127.0.0.1:4097`. Repeat with explicit external exposure only when intended:
+预期映射：`127.0.0.1:4097`。仅在有意时才重复显式对外暴露：
 
 ```bash
 SECLI_ALLOWED_PROJECT_PREFIXES=/tmp/secli-matrix-project \
@@ -258,18 +256,18 @@ kill "$secli_pid" 2>/dev/null || true
 wait "$secli_pid" 2>/dev/null || true
 ```
 
-Expected mapping: `0.0.0.0:4098`.
+预期映射：`0.0.0.0:4098`。
 
-Observed during the 2026-08-19 host test:
+2026-08-19 宿主机测试实测：
 
-- Project read/write probe passed.
-- Dataset read probe passed and dataset write failed with `Read-only file system`.
-- `-p 4097` published `127.0.0.1:4097`.
-- `-p 0.0.0.0:4098:4098` published `0.0.0.0:4098`.
-- The first attempt inherited an interactive terminal and was stopped by shell job control; the
-  commands above now redirect stdin/stdout for reliable background testing.
+- 项目读写探针通过。
+- 数据集读取探针通过，数据集写入以 `Read-only file system` 失败。
+- `-p 4097` 发布为 `127.0.0.1:4097`。
+- `-p 0.0.0.0:4098:4098` 发布为 `0.0.0.0:4098`。
+- 首次尝试继承了交互终端并被 shell 作业控制停止；上述命令现在重定向 stdin/stdout
+  以保证后台测试可靠。
 
-Cleanup:
+清理：
 
 ```bash
 podman rm -f secli 2>/dev/null || true
@@ -280,12 +278,12 @@ rm -rf /data/projects/hinnyuu/secli/manifest.local/probe.conf \
 unset SECLI_IMAGE SECLI_STATE_DIR
 ```
 
-## CLI authentication persistence
+## CLI 认证持久化
 
-Status: authenticated persistence, both port forms and normal-start updater stability verified.
+状态：认证持久化、两种端口形式和正常启动下的更新器稳定性已验证。
 
-Do not paste credentials, tokens or login URLs into project files, test logs or issue reports.
-Test one CLI at a time using a dedicated temporary state root:
+不要把凭据、token 或登录 URL 粘贴进项目文件、测试日志或 issue 报告。使用专用临时
+状态根，一次测试一个 CLI：
 
 ```bash
 cd /data/projects/tests/test_proj_04
@@ -295,55 +293,53 @@ export SECLI_STATE_DIR=/tmp/secli-auth-state
 /data/projects/hinnyuu/secli/secli.sh opencode
 ```
 
-Complete OpenCode's native `/connect` flow, exit normally, restart it and verify it remains
-authenticated. Repeat for Qoder CN:
+完成 OpenCode 的原生 `/connect` 流程，正常退出，重新启动并验证仍保持认证。对
+Qoder CN 重复：
 
 ```bash
 /data/projects/hinnyuu/secli/secli.sh init qoder-cli-cn
 /data/projects/hinnyuu/secli/secli.sh qoder-cli-cn
 ```
 
-Use Qoder's native `/login` flow. In a headless container it should print a URL for manual browser
-completion. Do not put `QODERCN_PERSONAL_ACCESS_TOKEN` in a manifest or template; secli does not
-implicitly forward host environment variables into the container.
+使用 Qoder 的原生 `/login` 流程。在无头容器中它应输出一个 URL，供浏览器手动完成。
+不要把 `QODERCN_PERSONAL_ACCESS_TOKEN` 放入 manifest 或模板；secli 不会隐式把宿主机
+环境变量转发进容器。
 
-After each CLI has been restarted successfully, inspect only relative filenames, not contents:
+每个 CLI 成功重启后，只检查相对文件名，不检查内容：
 
 ```bash
 find /tmp/secli-auth-state/opencode/home -maxdepth 4 -type f -printf '%P\n' | sort
 find /tmp/secli-auth-state/qoder-cli-cn/home -maxdepth 4 -type f -printf '%P\n' | sort
 ```
 
-Expected: state remains in the matching CLI Home and does not appear in the other CLI Home. Remove
-the temporary state only after deciding that its login state is no longer needed:
+预期：状态保留在对应 CLI 的 Home 中，不出现在另一个 CLI 的 Home 中。仅在确认其登录
+状态不再需要后才删除临时状态：
 
 ```bash
 unset SECLI_IMAGE SECLI_STATE_DIR
 rm -rf /tmp/secli-auth-state
 ```
 
-Observed during the 2026-08-19 host test:
+2026-08-19 宿主机测试实测：
 
-- OpenCode authentication, sessions and provider state persisted after restart under its Home.
-- Qoder CN authentication and sessions persisted after restart under its Home.
-- Qoder CN created native runtime files under `.qoder-cn/.auth/`, `.qoder-cn/.bin/`,
-  `.qoder-cn/entry/`, `.qoder-cn/projects/` and `.qodersec/`. These are expected Home state, not
-  secli-managed paths.
-- No credentials were placed in manifests, templates or `/nix`.
+- OpenCode 认证、会话和提供商状态在重启后保留在其 Home 下。
+- Qoder CN 认证和会话在重启后保留在其 Home 下。
+- Qoder CN 在 `.qoder-cn/.auth/`、`.qoder-cn/.bin/`、`.qoder-cn/entry/`、
+  `.qoder-cn/projects/` 和 `.qodersec/` 下创建了原生运行时文件。这些是预期的 Home
+  状态，不是 secli 管理的路径。
+- 没有凭据被放入 manifest、模板或 `/nix`。
 
-## Host launcher configuration file
+## 宿主机启动器配置文件
 
-Status: verified for whitelist override, environment precedence, state root redirection and
-invalid-key rejection.
+状态：白名单覆盖、环境变量优先级、状态根重定向和非法键拒绝已验证。
 
-These steps validate the `config/secli.conf` host configuration file added in `v0.2.0-dev`:
-lookup, precedence over built-in defaults, environment-variable override and rejection of
-invalid content. They use the fixed development image and a temporary state root, and do not
-need credentials.
+这些步骤验证 `v0.2.0-dev` 新增的 `config/secli.conf` 宿主机配置文件：查找、对内置
+默认值的优先级、环境变量覆盖和非法内容拒绝。使用固定开发镜像和临时状态根，不需要
+凭据。
 
-### Preconditions
+### 前置条件
 
-Run from the secli repository on the Fedora host with `localhost/secli:dev` already built:
+在已构建 `localhost/secli:dev` 的 Fedora 宿主机上，从 secli 仓库运行：
 
 ```bash
 cd /data/projects/hinnyuu/secli
@@ -351,9 +347,9 @@ podman image exists localhost/secli:dev; printf 'image-exists=%s\n' "$?"
 test ! -e config/secli.conf || { printf 'move aside your real config first\n'; exit 1; }
 ```
 
-### Whitelist override and environment precedence
+### 白名单覆盖与环境变量优先级
 
-Write a configuration file that whitelists only a temporary project directory:
+写入一个只允许临时项目目录的配置文件：
 
 ```bash
 mkdir -p /tmp/secli-config-project
@@ -366,38 +362,37 @@ EOF
 ./secli.sh init opencode
 ```
 
-Expected: `init` creates the OpenCode Home under `/tmp/secli-config-state`, not under the
-repository `state/` directory.
+预期：`init` 在 `/tmp/secli-config-state` 下创建 OpenCode Home，而不是仓库的
+`state/` 目录。
 
-Start from the whitelisted project without exporting any variable:
+不导出任何变量，从白名单内的项目启动：
 
 ```bash
 cd /tmp/secli-config-project
 /data/projects/hinnyuu/secli/secli.sh opencode -- --version
 ```
 
-Expected: the run succeeds using the configured image and state root.
+预期：使用配置的镜像和状态根成功运行。
 
-Confirm the environment variable overrides the configuration file. A project only the
-configuration whitelists must be rejected once the environment takes over:
+确认环境变量覆盖配置文件。一旦环境变量接管，仅配置文件允许的项目必须被拒绝：
 
 ```bash
 SECLI_ALLOWED_PROJECT_PREFIXES=/tmp/elsewhere \
   /data/projects/hinnyuu/secli/secli.sh opencode -- --version
 ```
 
-Expected: nonzero exit; the error names the environment source of the whitelist.
+预期：非零退出；错误信息指出白名单来源为环境变量。
 
-### Invalid content rejection
+### 非法内容拒绝
 
 ```bash
 printf 'SECLI_BOGUS=1\n' >config/secli.conf
 /data/projects/hinnyuu/secli/secli.sh list
 ```
 
-Expected: nonzero exit; the error reports the file path, line number and supported keys.
+预期：非零退出；错误报告文件路径、行号和支持键清单。
 
-### Cleanup
+### 清理
 
 ```bash
 cd /data/projects/hinnyuu/secli
@@ -405,59 +400,55 @@ rm -f config/secli.conf
 rm -rf /tmp/secli-config-project /tmp/secli-config-state
 ```
 
-### Result
+### 结果
 
-Record the result here after host testing:
+宿主机测试后在此记录结果：
 
 ```text
-Date: 2026-08-20
-Host architecture: Fedora host, amd64
-Podman version: verified >= 5.8.4
-Whitelist override via config: passed
-Environment precedence over config: passed
-State root redirection via config: passed
-Invalid key rejection: passed
-Notes: Host cleanup completed. Tested while the key was still named SECLI_ALLOWED_PREFIXES;
-it was renamed to SECLI_ALLOWED_PROJECT_PREFIXES within the same unreleased v0.2.0 cycle.
+日期：2026-08-20
+宿主机架构：Fedora 宿主机，amd64
+Podman 版本：已验证 >= 5.8.4
+配置白名单覆盖：通过
+环境变量优先于配置：通过
+配置状态根重定向：通过
+非法键拒绝：通过
+备注：宿主机清理完成。测试时键名仍为 SECLI_ALLOWED_PREFIXES；它在同一未发布的
+v0.2.0 周期内更名为 SECLI_ALLOWED_PROJECT_PREFIXES。
 ```
 
-## Clean-slate verification of the v0.2.0-dev launcher
+## v0.2.0-dev 启动器从零验证
 
-Status: passed on Fedora amd64 after full cleanup, image rebuild and empty-volume restart.
+状态：完全清理、镜像重建和空卷重启后在 Fedora amd64 通过。
 
-This run verifies the launcher after the whitelist key rename to
-`SECLI_ALLOWED_PROJECT_PREFIXES` and the default narrowing to `/data/projects`. The host was
-fully cleaned first: the `secli` container, `secli-nix-v1`, `localhost/secli:dev`, the
-repository `state/`, `manifest.local/`, `config/secli.conf` and all `/tmp/secli-*` test
-directories were removed, then the image was rebuilt from the merged `main` and every step
-below started from an empty volume.
+本次运行验证白名单键更名为 `SECLI_ALLOWED_PROJECT_PREFIXES`、默认值收窄为
+`/data/projects` 之后的启动器。宿主机先被完全清理：移除 `secli` 容器、
+`secli-nix-v1`、`localhost/secli:dev`、仓库的 `state/`、`manifest.local/`、
+`config/secli.conf` 和所有 `/tmp/secli-*` 测试目录，然后从合并后的 `main` 重建镜像，
+以下每一步都从空卷开始。
 
-Verified on 2026-08-20:
+2026-08-20 验证：
 
-- Image rebuild from the Containerfile and empty `secli-nix-v1` initialization passed.
-- OpenCode `1.18.18` and Qoder CN `1.1.25` installed from a clean volume.
-- Starting from `/data/projects` succeeded under the built-in default whitelist.
-- Starting from `/tmp` was rejected with the built-in default as the reported source.
-- `config/secli.conf` with `SECLI_ALLOWED_PROJECT_PREFIXES=/data/projects:/tmp` allowed a
-  `/tmp` project; the legacy key name `SECLI_ALLOWED_PREFIXES` was rejected as unknown.
-- The environment variable overrode the configuration file whitelist.
-- A dataset under `/tmp` mounted successfully while the whitelist stayed `/data/projects`,
-  confirming dataset mounts are independent of the project whitelist.
+- 从 Containerfile 重建镜像和空 `secli-nix-v1` 初始化通过。
+- OpenCode `1.18.18` 和 Qoder CN `1.1.25` 从干净卷安装成功。
+- 内置默认白名单下从 `/data/projects` 启动成功。
+- 从 `/tmp` 启动被拒绝，报告的来源为内置默认。
+- `config/secli.conf` 配置 `SECLI_ALLOWED_PROJECT_PREFIXES=/data/projects:/tmp` 后
+  允许 `/tmp` 项目；旧键名 `SECLI_ALLOWED_PREFIXES` 被作为未知键拒绝。
+- 环境变量覆盖了配置文件的白名单。
+- 白名单保持 `/data/projects` 时 `/tmp` 下的数据集挂载成功，确认数据集挂载独立于
+  项目白名单。
 
-## Final release verification
+## 最终发布验证
 
-Status: passed on Fedora amd64 with a clean CLI state root and a newly created `secli-nix-v1`.
+状态：在 Fedora amd64 上以干净 CLI 状态根和新建 `secli-nix-v1` 通过。
 
-The final `v0.1.0` release was rebuilt from merged `main`. A clean `/tmp/secli-rc-state` was
-initialized with `secli.sh init all`; both configuration files matched their repository templates
-before first start. First profile installation reported OpenCode `1.18.18` and Qoder CN `1.1.25`,
-and repeat version checks were noops.
+最终 `v0.1.0` 发布从合并后的 `main` 重建。干净的 `/tmp/secli-rc-state` 用
+`secli.sh init all` 初始化；两个配置文件在首次启动前与仓库模板一致。首次 profile
+安装报告 OpenCode `1.18.18` 和 Qoder CN `1.1.25`，重复版本检查为 noop。
 
-OpenCode resolved `autoupdate: false` and `share: disabled`, retained its template unchanged, and
-did not change updater binary candidates after a normal interactive session. Qoder displayed
-`Enable Auto Update false`, retained both updater and YOLO-disable settings after repeated starts,
-and kept its native entry/runtime files byte-stable after first-run initialization. Both running
-processes resolved to their dedicated Nix store/profile paths rather than Home copies.
+OpenCode 解析出 `autoupdate: false` 和 `share: disabled`，模板保持不变，正常交互会话
+后未更改更新器二进制候选。Qoder 显示 `Enable Auto Update false`，重复启动后保留更新
+关闭和 YOLO 禁用设置，首次运行初始化后原生 entry/运行时文件保持字节稳定。两个运行
+进程都解析到各自的 Nix store/profile 路径，而非 Home 副本。
 
-All release steps completed without an automatic update, replacement binary or alternate
-Home-based startup path.
+所有发布步骤完成，全程无自动更新、替换二进制或基于 Home 的替代启动路径。
