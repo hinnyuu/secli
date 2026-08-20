@@ -9,8 +9,8 @@
 
 ## 1. 当前状态
 
-本仓库目前处于**v0.1.0 已正式发布**状态。README 描述已实现的 v1 用户接口；发布
-工作流和文档必须与仓库版本保持一致。
+本仓库已正式发布 v0.1.0，当前正以 `VERSION=v0.2.0-dev` 开发下一版本。README 描述已实现
+的用户接口；发布工作流和文档必须与仓库版本保持一致。
 
 实现阶段必须先创建 `flake.nix` 与 `flake.lock`，并通过 `nix develop` 进入开发环境；
 `flake.lock` 属于必须提交的交付文件。当前允许初始化本地 Git 仓库、创建本地分支和提交，
@@ -72,6 +72,7 @@ secli 分为四个职责边界。
 `secli.sh` 是唯一用户入口，负责：
 
 - 从自身路径推导仓库/部署根目录；
+- 加载并校验可选用户配置文件 `config/secli.conf`；
 - 解析 secli 参数，并在 `--` 后原样保留 CLI 参数；
 - 查找并校验 CLI manifest；
 - 解析和校验当前项目、数据集、端口、GPU 等挂载参数；
@@ -356,7 +357,8 @@ secli 选项：
 - 当前工作目录必须先做物理路径规范化，再执行前缀白名单校验；校验失败立即拒绝启动，
   不猜测替代目录，也不自动扩大白名单。
 - 默认允许 `/data/projects`、`/data/test`、`/data/dataset`。
-- `SECLI_ALLOWED_PREFIXES` 以冒号分隔并整体覆盖默认值。
+- `SECLI_ALLOWED_PREFIXES` 以冒号分隔并整体覆盖默认值；环境变量优先于配置文件
+  `config/secli.conf` 中的同名键（见 §8.4）。
 - 前缀匹配必须尊重路径边界，`/data/projects-evil` 不属于 `/data/projects`。
 - 当前项目以同一绝对路径 `rw,z` 挂载，并作为容器工作目录。
 - 数据集必须存在且规范化，以同一绝对路径 `ro,z` 挂载。
@@ -370,6 +372,32 @@ secli 选项：
 - stdin 保持连接；仅当调用环境是 TTY 时分配 TTY，保证非交互命令可用于脚本。
 - entrypoint 最终使用 `exec`，退出码和信号必须透明传递。
 - 网络固定为 `slirp4netns:port_handler=slirp4netns`，不要改回已知有端口问题的 pasta。
+
+### 8.4 宿主机配置文件
+
+宿主机启动器读取可选的持久用户配置，查找顺序：
+
+1. `SECLI_CONFIG` 环境变量指向的路径；显式指定但文件缺失时立即报错；
+2. 部署根下的 `config/secli.conf`；缺失时保持内置默认值。
+
+格式为严格 `SECLI_KEY=value` 行格式：空行与 `#` 注释忽略；键值两侧空白 trim；
+未知键、无 `=` 的行、空值都立即报错，错误信息包含文件路径、行号和支持键清单；
+同键后定义覆盖前定义；不允许多行值和 `+=` 追加语法，保证未来可平滑增加
+drop-in 目录（按文件名排序应用、后文件覆盖前文件）。配置文件按数据解析，
+绝不 source 或执行；这与 manifest 的受信任代码契约不同。
+
+优先级固定为：环境变量 > 配置文件 > 内置默认。
+
+当前支持的键与内置默认：
+
+- `SECLI_ALLOWED_PREFIXES`：项目路径白名单，默认 `/data/projects:/data/test:/data/dataset`；
+- `SECLI_IMAGE`：完整镜像引用，默认 `ghcr.io/hinnyuu/secli:<VERSION>`；
+- `SECLI_STATE_DIR`：状态根，默认 `<部署根>/state`。
+
+各键校验规则与环境变量行为一致。容器名与 Nix 卷 epoch 是架构常量，不开放配置。
+配置文件只适用于 git clone 部署；Nix 包部署的 `BASE_DIR` 是只读 store 路径，
+继续使用环境变量配置。全局 `-h/--help` 不加载配置；`init`、`list` 与 CLI 启动
+都加载。配置只由宿主机启动器读取，不挂入容器。
 
 ---
 
@@ -489,15 +517,16 @@ checks
 ```
 
 - `devShells.default`：ShellCheck、Bats、shfmt、actionlint，以及测试所需的 jq 等开发工具。
-- `packages.default`：可执行的宿主机 secli 部署包，包含运行所需脚本和只读资源；用于
-  `nix build` 后执行 `./result/bin/secli --help` 冒烟测试。
+- `packages.default`：可执行的宿主机 secli 包，仅用于开发验证；`nix build` 后执行
+  `./result/bin/secli --help` 冒烟测试。它不是面向用户的部署方式。
 - Nix package wrapper 在未显式设置 `SECLI_STATE_DIR` 时使用 `$XDG_STATE_HOME/secli`，并
   回退到 `$HOME/.local/state/secli`，不得尝试写入只读 Nix store。Git clone 部署仍默认使用
-  仓库内 `state/`。
-- `checks`：shellcheck、格式、Bats、manifest 契约与模板布局检查。
+  仓库内 `state/`。Nix 包的 `BASE_DIR` 是只读 store 路径，配置文件 `config/secli.conf`
+  只适用于 git clone 部署；Nix 包场景继续用环境变量配置。
+- `checks`：shellcheck、格式、Bats、manifest 契约、模板布局与文档一致性检查。
 
-生产镜像仍由 Containerfile 构建。Flake 的宿主机包是额外的可复现验证/安装方式，不能
-改变 `git clone` 作为主要部署模型。`flake.lock` 必须提交。
+生产镜像仍由 Containerfile 构建。唯一面向用户的部署模型是 `git clone`；Flake 的宿主机包
+只是开发验证产物，不能改变 `git clone` 作为主要部署模型。`flake.lock` 必须提交。
 
 ---
 
@@ -514,6 +543,8 @@ secli/
 ├── secli.sh
 ├── entrypoint.sh
 ├── Containerfile
+├── config/
+│   └── secli.conf.example          # 用户复制为 secli.conf（gitignore）
 ├── manifest/
 │   ├── opencode.conf
 │   └── qoder-cli-cn.conf
@@ -528,6 +559,7 @@ secli/
 │   └── fixtures/
 ├── docs/
 │   ├── security.md
+│   ├── config.md
 │   ├── nvidia.md
 │   ├── testing-host.md
 │   └── clis/
@@ -649,6 +681,7 @@ amend（除非用户明确要求）、破坏性 reset 和修改他人无关变�
 - [x] Containerfile + CI 构建 GHCR 镜像
 - [x] 仓库版本绑定不可变镜像标签
 - [x] `/nix` volume 使用独立兼容 epoch
+- [x] 集中宿主机配置文件 `config/secli.conf`，优先级 env > 配置 > 默认，仅 git clone 部署
 
 实施状态：
 

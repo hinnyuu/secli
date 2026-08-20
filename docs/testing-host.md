@@ -331,6 +331,94 @@ Observed during the 2026-08-19 host test:
   secli-managed paths.
 - No credentials were placed in manifests, templates or `/nix`.
 
+## Host launcher configuration file
+
+Status: pending host verification.
+
+These steps validate the `config/secli.conf` host configuration file added in `v0.2.0-dev`:
+lookup, precedence over built-in defaults, environment-variable override and rejection of
+invalid content. They use the fixed development image and a temporary state root, and do not
+need credentials.
+
+### Preconditions
+
+Run from the secli repository on the Fedora host with `localhost/secli:dev` already built:
+
+```bash
+cd /data/projects/hinnyuu/secli
+podman image exists localhost/secli:dev; printf 'image-exists=%s\n' "$?"
+test ! -e config/secli.conf || { printf 'move aside your real config first\n'; exit 1; }
+```
+
+### Whitelist override and environment precedence
+
+Write a configuration file that whitelists only a temporary project directory:
+
+```bash
+mkdir -p /tmp/secli-config-project
+printf 'project\n' >/tmp/secli-config-project/project.txt
+cat >config/secli.conf <<'EOF'
+SECLI_ALLOWED_PREFIXES=/tmp/secli-config-project
+SECLI_IMAGE=localhost/secli:dev
+SECLI_STATE_DIR=/tmp/secli-config-state
+EOF
+./secli.sh init opencode
+```
+
+Expected: `init` creates the OpenCode Home under `/tmp/secli-config-state`, not under the
+repository `state/` directory.
+
+Start from the whitelisted project without exporting any variable:
+
+```bash
+cd /tmp/secli-config-project
+/data/projects/hinnyuu/secli/secli.sh opencode -- --version
+```
+
+Expected: the run succeeds using the configured image and state root.
+
+Confirm the environment variable overrides the configuration file. A project only the
+configuration whitelists must be rejected once the environment takes over:
+
+```bash
+SECLI_ALLOWED_PREFIXES=/tmp/elsewhere \
+  /data/projects/hinnyuu/secli/secli.sh opencode -- --version
+```
+
+Expected: nonzero exit; the error names the environment source of the whitelist.
+
+### Invalid content rejection
+
+```bash
+printf 'SECLI_BOGUS=1\n' >config/secli.conf
+/data/projects/hinnyuu/secli/secli.sh list
+```
+
+Expected: nonzero exit; the error reports the file path, line number and supported keys.
+
+### Cleanup
+
+```bash
+cd /data/projects/hinnyuu/secli
+rm -f config/secli.conf
+rm -rf /tmp/secli-config-project /tmp/secli-config-state
+```
+
+### Result
+
+Record the result here after host testing:
+
+```text
+Date:
+Host architecture:
+Podman version:
+Whitelist override via config:
+Environment precedence over config:
+State root redirection via config:
+Invalid key rejection:
+Notes:
+```
+
 ## Final release verification
 
 Status: passed on Fedora amd64 with a clean CLI state root and a newly created `secli-nix-v1`.

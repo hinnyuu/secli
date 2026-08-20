@@ -6,8 +6,10 @@ host mount explicit. It is not a perfect sandbox and must not be described as on
 ## Trust assumptions
 
 - The host user trusts the secli repository, its manifests and the selected image.
-- Repository and local manifests are trusted Bash source files. Loading a manifest is equivalent to
-  executing its contents.
+- Repository and local manifests are trusted Bash source files. Loading a manifest is equivalent
+  to executing its contents.
+- The host configuration file `config/secli.conf` is parsed as validated data, never sourced or
+  executed. It only influences the host launcher and is not mounted into the container.
 - Rootless Podman, the host kernel and SELinux provide the container boundary.
 - The user reviews CLI approvals, project changes and credentials using the CLI's native controls.
 
@@ -24,6 +26,7 @@ host mount explicit. It is not a perfect sandbox and must not be described as on
 - Other host projects and datasets that were not explicitly mounted.
 - Other CLI Homes and their authentication state.
 - The host user's ordinary Home directory.
+- The host launcher configuration file, which is never mounted into the container.
 - Host paths outside the explicit mount set.
 
 The container process runs as root inside the container. Rootless Podman maps that root to the host
