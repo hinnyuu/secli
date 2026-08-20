@@ -319,7 +319,7 @@ nix build
 ```
 
 检查包括 ShellCheck、shfmt、actionlint、Bats、文档一致性、manifest 契约和模板布局。
-当前 Bats 覆盖宿主机启动器和 entrypoint 的 22 个场景；Podman 参数测试使用 mock，不依赖
+当前 Bats 覆盖宿主机启动器和 entrypoint 的 29 个场景；Podman 参数测试使用 mock，不依赖
 当前开发容器内的嵌套 daemon。每次提交前检查 `AGENTS.md`、README、相关文档、`.gitignore`、
 `VERSION` 和 `flake.lock`；事实变化必须与实现放在同一提交，无关提交不制造文档噪声。
 
