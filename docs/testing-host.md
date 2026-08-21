@@ -438,6 +438,18 @@ Podman 版本：已验证 >= 5.8.4
 - 白名单保持 `/data/projects` 时 `/tmp` 下的数据集挂载成功，确认数据集挂载独立于
   项目白名单。
 
+## v0.2.1 模板验证
+
+状态：在 Fedora amd64 上以临时状态根通过。
+
+2026-08-21 验证：
+
+- `secli.sh init all` 成功创建两个全新 CLI Home。
+- OpenCode 与 Qoder CLI CN 的 Home `AGENTS.md` 均与仓库模板逐字节一致。
+- 两个模板均包含对应 CLI 由运行环境统一提供的规则，以及敏感性不明时询问用户的规则。
+- OpenCode `1.18.18` 与 Qoder CN `1.1.25` 均在新 Home 下正常输出版本。
+- 临时状态根 `/tmp/secli-v021-template-state` 已清理。
+
 ## 最终发布验证
 
 状态：在 Fedora amd64 上以干净 CLI 状态根和新建 `secli-nix-v1` 通过。
