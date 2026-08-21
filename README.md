@@ -3,7 +3,7 @@
 Secure Enhanced CLI：使用 Fedora 宿主机上的 rootless Podman 与容器内 Nix，为多个
 AI coding CLI 提供统一、隔离、可重建的运行环境。
 
-> **项目状态：v0.2.0 已正式发布。**
+> **项目状态：v0.2.0 已正式发布；`VERSION=v0.2.1-dev` 正在开发下一版本。**
 >
 > 发布前请先确认 GitHub Actions 和 GHCR 镜像 workflow 成功；开发测试可通过 `SECLI_IMAGE`
 > 指向本地镜像。
