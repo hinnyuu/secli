@@ -39,6 +39,9 @@ Qoder CN 配置目录还包含会话、日志、插件和其他原生运行时�
 .qoder-cn/AGENTS.md
 ```
 
+`AGENTS.md` 模板为容器内 Agent 提供精简的环境约束，覆盖 Nix-only 项目依赖、无嵌套
+容器、Git 远程操作和敏感数据处理，不暴露 secli 的 manifest/profile 等内部实现。
+
 settings 模板：
 
 - 将 `general.enableAutoUpdate` 设为 `false`；

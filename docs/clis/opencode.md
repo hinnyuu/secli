@@ -34,6 +34,9 @@ github:numtide/llm-agents.nix/c4c6673c4c1ceb69d845fa665a714e1273d0acac#opencode
 .config/opencode/AGENTS.md
 ```
 
+`AGENTS.md` 模板为容器内 Agent 提供精简的环境约束，覆盖 Nix-only 项目依赖、无嵌套
+容器、Git 远程操作和敏感数据处理，不暴露 secli 的 manifest/profile 等内部实现。
+
 模板关闭 OpenCode 的原生自动更新和会话分享，并将读/列表/搜索操作设为 allow，同时让
 有副作用的操作保持在原生审批边界。`init` 仅在目标文件不存在时复制。用户可以编辑或
 替换这两个文件。
