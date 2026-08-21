@@ -3,7 +3,7 @@
 Secure Enhanced CLI：使用 Fedora 宿主机上的 rootless Podman 与容器内 Nix，为多个
 AI coding CLI 提供统一、隔离、可重建的运行环境。
 
-> **项目状态：v0.2.0 已正式发布；`VERSION=v0.2.1-dev` 正在开发下一版本。**
+> **项目状态：v0.2.1 已正式发布。**
 >
 > 发布前请先确认 GitHub Actions 和 GHCR 镜像 workflow 成功；开发测试可通过 `SECLI_IMAGE`
 > 指向本地镜像。
@@ -98,7 +98,7 @@ v1 的容器名固定为 `secli`，全局只允许一个实例。切换不同 CL
 ```bash
 git clone https://github.com/hinnyuu/secli
 cd secli
-podman pull ghcr.io/hinnyuu/secli:v0.2.0
+podman pull ghcr.io/hinnyuu/secli:v0.2.1
 ```
 
 仓库中的 `VERSION` 决定 `secli.sh` 默认使用的镜像标签。可以显式覆盖：
@@ -112,7 +112,7 @@ SECLI_IMAGE=ghcr.io/hinnyuu/secli:custom ./secli.sh opencode
 
 `latest` 和 `stable` 可以作为方便别名，但 secli 默认不依赖移动标签。
 
-正式版本使用 `v0.2.0`。开发或本地 Fedora 测试时显式覆盖镜像：
+正式版本使用 `v0.2.1`。开发或本地 Fedora 测试时显式覆盖镜像：
 
 ```bash
 SECLI_IMAGE=localhost/secli:dev ./secli.sh opencode
@@ -391,6 +391,7 @@ NVIDIA CDI、项目/数据集读写边界、两个 CLI 的认证持久化、loop
   的 updater/shim 行为已验证
 - [x] 首个版本化发布 `v0.1.0`
 - [x] 集中宿主机配置文件 `config/secli.conf`（v0.2.0）
+- [x] 优化 OpenCode 与 Qoder CLI CN 默认行为规则模板（v0.2.1）
 
 实现按上述顺序拆成可独立验证的阶段；除非明确要求完整 v1，否则不把所有阶段合并成
 一次巨大变更。build 阶段允许初始化本地 Git 仓库，并按 Conventional Commits 创建本地

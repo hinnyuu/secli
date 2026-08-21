@@ -74,7 +74,7 @@ podman run --rm --entrypoint /nix/var/nix/profiles/secli-base/bin/rg \
 预期：
 
 - entrypoint 为 `["/entrypoint.sh"]`；
-- 已发布镜像的版本为 `v0.2.0`；
+- 已发布镜像的版本为 `v0.2.1`；
 - git 和 ripgrep 正常输出版本。
 
 ### 空卷与真实 CLI profile
