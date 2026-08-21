@@ -9,7 +9,7 @@
 
 ## 1. 当前状态
 
-本仓库已正式发布 v0.2.0。README 描述已实现的用户接口；发布工作流和文档必须与仓库
+本仓库已正式发布 v0.2.1。README 描述已实现的用户接口；发布工作流和文档必须与仓库
 版本保持一致。
 
 实现阶段必须先创建 `flake.nix` 与 `flake.lock`，并通过 `nix develop` 进入开发环境；
@@ -475,7 +475,7 @@ NVIDIA 驱动、nvidia-container-toolkit、`nvidia-ctk cdi generate`、Podman �
 
 ### 12.2 版本绑定
 
-- 仓库使用 `VERSION` 保存版本。正式发布版本为 `v0.2.0`，Git tag、GitHub Release 与
+- 仓库使用 `VERSION` 保存版本。正式发布版本为 `v0.2.1`，Git tag、GitHub Release 与
   镜像不可变标签必须一致。
 - `secli.sh` 默认使用 `ghcr.io/hinnyuu/secli:<VERSION>`。
 - `SECLI_IMAGE` 允许显式覆盖完整镜像引用。
